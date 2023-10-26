@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
-  RefreshControl,
-  StyleSheet,
+  Button,
+  ImageBackground,
+  Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
-  Modal,
   TextInput,
   View,
-  Button,
-  Platform,
-  StatusBar,
-  ImageBackground,
+  RefreshControl,
 } from 'react-native';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
@@ -115,6 +115,7 @@ const Weather = () => {
     if (icon == '02n' || icon == '03n' || icon == '04n') icon = '02n';
     if (icon == '09n' || icon == '10n') icon = '09n';
     setBgImage(IMAGES['i' + icon]);
+    return icon;
   };
 
   const changeColor = (icon) => {
@@ -126,6 +127,7 @@ const Weather = () => {
       icon == '13n' ||
       icon == '02n' ||
       icon == '09n' ||
+      icon == '09d' ||
       icon == '10d'
     ) {
       setColor('#ffffff');
@@ -154,7 +156,7 @@ const Weather = () => {
       data.sys.sunset = toHumanDate(
         data.sys.sunset - offset + data.timezone
       ).split(' ')[1];
-      changeBackground(data.weather[0].icon);
+      data.weather[0].icon = changeBackground(data.weather[0].icon);
       changeColor(data.weather[0].icon);
       setWeather(data);
     } catch (error) {
