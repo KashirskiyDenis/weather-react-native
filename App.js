@@ -211,12 +211,7 @@ const Weather = () => {
             style={[
               styles.section_param,
               { fontSize: 16 },
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
             ]}>
             Текущее место{' '}
             <Text style={styles.currentCity} onPress={pressLocation}>
@@ -227,36 +222,24 @@ const Weather = () => {
           <Text
             style={[
               styles.city,
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
+              { color: color, textShadowColor: shadow },
             ]}>
             {weather?.name ? weather.name : ''}
           </Text>
           <Text
             style={[
               styles.temp,
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
+              { color: color, textShadowColor: shadow },
             ]}>
             {weather.main?.temp ? weather.main.temp + '°' : '-'}
           </Text>
           <Text
             style={[
               styles.temp_max_min,
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
+              { color: color, textShadowColor: shadow },
             ]}>
             {weather.main?.temp_max ? weather.main.temp_max : 0}°C /{' '}
             <Text style={styles.temp_min}>
@@ -266,12 +249,8 @@ const Weather = () => {
           <Text
             style={[
               styles.weather,
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
+              { color: color, textShadowColor: shadow },
             ]}>
             {weather?.weather
               ? weather.weather[0].description[0].toUpperCase() +
@@ -282,24 +261,16 @@ const Weather = () => {
             <Text
               style={[
                 styles.title_section,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               КОМФОРТ
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Ощущается как:{' '}
               {weather.main?.feels_like ? weather.main.feels_like : 0}
@@ -308,36 +279,24 @@ const Weather = () => {
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Влажность: {weather.main?.humidity ? weather.main.humidity : 0}%
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Облачность: {weather.clouds?.all ? weather.clouds.all : 0}%
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Давление : {weather.main?.pressure ? weather.main.pressure : 0} мм
               рт.ст.
@@ -345,12 +304,8 @@ const Weather = () => {
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Видимость : {weather?.visibility ? weather.visibility : 0} м
             </Text>
@@ -359,24 +314,16 @@ const Weather = () => {
             <Text
               style={[
                 styles.title_section,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               ВЕТЕР
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Направление ветра:{' '}
               {weather.wind?.deg
@@ -386,12 +333,8 @@ const Weather = () => {
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Скорость ветра: {weather.wind?.speed ? weather.wind.speed : 0} м/с
             </Text>
@@ -401,36 +344,24 @@ const Weather = () => {
             <Text
               style={[
                 styles.title_section,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               ВОСХОД и ЗАКАТ
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Восход солнца: {weather.sys?.sunrise ? weather.sys.sunrise : ''}
             </Text>
             <Text
               style={[
                 styles.section_param,
-                {
-                  color: color,
-                  textShadowColor: shadow,
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 16,
-                },
+                styles.section_param_shadow,
+                { color: color, textShadowColor: shadow },
               ]}>
               Закат солнца: {weather.sys?.sunset ? weather.sys.sunset : ''}
             </Text>
@@ -439,12 +370,8 @@ const Weather = () => {
           <Text
             style={[
               styles.margin,
-              {
-                color: color,
-                textShadowColor: shadow,
-                textShadowOffset: { width: 1, height: 1 },
-                textShadowRadius: 16,
-              },
+              styles.section_param_shadow,
+              { color: color, textShadowColor: shadow },
             ]}>
             Данные обновлены: {weather?.dt ? weather.dt : 'dd/mm/yyyy hh:mm:ss'}
           </Text>
@@ -485,9 +412,15 @@ const styles = StyleSheet.create({
   title_section: {
     fontWeight: 600,
     marginTop: 12,
+    fontSize: 24,
   },
   section_param: {
     paddingTop: 4,
+    fontSize: 20,
+  },
+  section_param_shadow: {
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 15,
   },
   margin: {
     marginBottom: 8,
