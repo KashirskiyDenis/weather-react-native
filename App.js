@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
+  Alert,
   Button,
   ImageBackground,
   Modal,
@@ -13,10 +14,14 @@ import {
   View,
   RefreshControl,
 } from 'react-native';
+import Config from 'react-native-config'
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
-const APP_ID = '';
+const APP_ID = Config.OPENWEATHER_API_KEY;
 const UNITS = 'metric';
+const HPA_TO_MMHG = 0.750062; // 1 гПа = 0.750062 мм рт.ст.
+const COMPASS_SECTORS = 16;
+const DEG_PER_SECTOR = 360 / COMPASS_SECTORS; // 22.5°
 const WIND_DEG_TEXT = [
   'Северный',
   'ССВ',
@@ -52,7 +57,7 @@ const IMAGES = {
 };
 
 const Weather = () => {
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [city, setCity] = useState('Astrakhan');
   const [weather, setWeather] = useState({});
   const [url, setUrl] = useState(
@@ -66,17 +71,12 @@ const Weather = () => {
 
   const changeUrl = (q = '', lat, lon) => {
     let str = '';
-    if (q != '')
+    if (q !== '')
       str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
     else
       str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
 
     setUrl(str);
-    return str;
-  };
-
-  const onChangeText = (text) => {
-    setText(text);
   };
 
   const pressLocation = () => {
@@ -84,8 +84,8 @@ const Weather = () => {
     setModalVisible(true);
   };
 
-  const changeCity = async () => {
-    if (text.trim().length == 0) {
+  const changeCity = () => {
+    if (text.trim().length === 0) {
       setModalVisible(!modalVisible);
       return;
     }
@@ -95,13 +95,14 @@ const Weather = () => {
   };
 
   useEffect(() => {
+    console.log(url);
     updateWeather();
   }, [url]);
 
   const addZero = (num) => (num < 10 ? '0' + num : num);
 
   const toHumanDate = (dt) => {
-    date = new Date(dt * 1000);
+    let date = new Date(dt * 1000);
     let dateStr = `${date.getDate()}/${
       date.getMonth() + 1
     }/${date.getFullYear()} ${date.getHours()}:${addZero(date.getMinutes())}`;
@@ -109,26 +110,26 @@ const Weather = () => {
   };
 
   const changeBackground = (icon) => {
-    if (icon == '02d' || icon == '03d' || icon == '04d') icon = '02d';
-    if (icon == '09d' || icon == '10d') icon = '09d';
+    if (icon === '02d' || icon === '03d' || icon === '04d') icon = '02d';
+    if (icon === '09d' || icon === '10d') icon = '09d';
 
-    if (icon == '02n' || icon == '03n' || icon == '04n') icon = '02n';
-    if (icon == '09n' || icon == '10n') icon = '09n';
+    if (icon === '02n' || icon === '03n' || icon === '04n') icon = '02n';
+    if (icon === '09n' || icon === '10n') icon = '09n';
     setBgImage(IMAGES['i' + icon]);
     return icon;
   };
 
   const changeColor = (icon) => {
     if (
-      icon == '01n' ||
-      icon == '50d' ||
-      icon == '50n' ||
-      icon == '11n' ||
-      icon == '13n' ||
-      icon == '02n' ||
-      icon == '09n' ||
-      icon == '09d' ||
-      icon == '10d'
+      icon === '01n' ||
+      icon === '50d' ||
+      icon === '50n' ||
+      icon === '11n' ||
+      icon === '13n' ||
+      icon === '02n' ||
+      icon === '09n' ||
+      icon === '09d' ||
+      icon === '10d'
     ) {
       setColor('#ffffff');
       setShadow('#000000');
@@ -139,34 +140,43 @@ const Weather = () => {
   };
 
   const updateWeather = async () => {
+    setRefreshing(true);
+
     try {
       let response = await fetch(url);
+
       if (!response.ok) {
-        alert('Город не найден.');
+        Alert.alert('Ошибка', 'Город не найден. 2,0');
         return;
       }
-      const data = await (await fetch(url)).json();
+
+      let data = await response.json();
       let date = new Date();
       let offset = Math.abs(date.getTimezoneOffset() * 60);
-      data.dt = toHumanDate(data.dt);
-      data.main.pressure = Math.round(data.main.pressure * 0.750062);
-      data.sys.sunrise = toHumanDate(
+      let weather = {};
+      weather.dt = toHumanDate(data.dt);
+      weather.main.pressure = Math.round(data.main.pressure * HPA_TO_MMHG);
+      weather.sys.sunrise = toHumanDate(
         data.sys.sunrise - offset + data.timezone
       ).split(' ')[1];
-      data.sys.sunset = toHumanDate(
+      weather.sys.sunset = toHumanDate(
         data.sys.sunset - offset + data.timezone
       ).split(' ')[1];
-      data.weather[0].icon = changeBackground(data.weather[0].icon);
+      weather.weather[0].icon = changeBackground(data.weather[0].icon);
       changeColor(data.weather[0].icon);
-      setWeather(data);
+      setWeather(weather);
     } catch (error) {
+      Alert.alert('Ошибка', 'Ошибка сети. Проверьте подключение.');
+
       console.log(error.message);
+    } finally {
+      setRefreshing(false);
     }
   };
 
   return (
     <ImageBackground
-      source={bgImage}
+      source={IMAGES['i01d']}//bgImage}
       resizeMode="cover"
       style={{
         height: null,
@@ -175,7 +185,7 @@ const Weather = () => {
         flex: 1,
       }}>
       <ScrollView
-        style={styles.conteainer}
+        style={styles.container}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={updateWeather} />
         }>
@@ -189,11 +199,11 @@ const Weather = () => {
             }}>
             <View style={styles.centeredView}>
               <View style={styles.modalView}>
-                <Text style={{ fontWeight: 600 }}>Изменение локации</Text>
+                <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
                 <TextInput
                   style={styles.modalText}
                   placeholder="Введите название города"
-                  onChangeText={onChangeText}
+                  onChangeText={setText}
                   value={text}
                 />
                 <View style={styles.fixToText}>
@@ -209,9 +219,9 @@ const Weather = () => {
 
           <Text
             style={[
-              styles.section_param,
+              styles.sectionParam,
               { fontSize: 16 },
-              styles.section_param_shadow,
+              styles.sectionParamShadow,
             ]}>
             Текущее место{' '}
             <Text style={styles.currentCity} onPress={pressLocation}>
@@ -222,7 +232,7 @@ const Weather = () => {
           <Text
             style={[
               styles.city,
-              styles.section_param_shadow,
+              styles.sectionParamShadow,
               { color: color, textShadowColor: shadow },
             ]}>
             {weather?.name ? weather.name : ''}
@@ -230,26 +240,26 @@ const Weather = () => {
           <Text
             style={[
               styles.temp,
-              styles.section_param_shadow,
+              styles.sectionParamShadow,
               { color: color, textShadowColor: shadow },
             ]}>
             {weather.main?.temp ? weather.main.temp + '°' : '-'}
           </Text>
           <Text
             style={[
-              styles.temp_max_min,
-              styles.section_param_shadow,
+              styles.tempMaxMin,
+              styles.sectionParamShadow,
               { color: color, textShadowColor: shadow },
             ]}>
             {weather.main?.temp_max ? weather.main.temp_max : 0}°C /{' '}
-            <Text style={styles.temp_min}>
+            <Text style={styles.tempMin}>
               {weather.main?.temp_min ? weather.main.temp_min : 0}°C
             </Text>
           </Text>
           <Text
             style={[
               styles.weather,
-              styles.section_param_shadow,
+              styles.sectionParamShadow,
               { color: color, textShadowColor: shadow },
             ]}>
             {weather?.weather
@@ -257,132 +267,90 @@ const Weather = () => {
                 weather.weather[0].description.substring(1)
               : ''}
           </Text>
+
           <View>
-            <Text
-              style={[
-                styles.title_section,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            <WeatherText
+              style={[styles.titleSection, styles.sectionParamShadow]}
+              color={color}
+              shadow={shadow}>
               КОМФОРТ
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
-              Ощущается как:{' '}
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
+              Ощущается как:
               {weather.main?.feels_like ? weather.main.feels_like : 0}
               °C
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
-              Влажность: {weather.main?.humidity ? weather.main.humidity : 0}%
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
+              Влажность: {weather.main?.humidity ?? 0}%
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Облачность: {weather.clouds?.all ? weather.clouds.all : 0}%
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Давление : {weather.main?.pressure ? weather.main.pressure : 0} мм
               рт.ст.
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Видимость : {weather?.visibility ? weather.visibility : 0} м
-            </Text>
+            </WeatherText>
           </View>
+
           <View>
-            <Text
-              style={[
-                styles.title_section,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            <WeatherText
+              style={[styles.titleSection, styles.sectionParamShadow]}
+              color={color}
+              shadow={shadow}>
               ВЕТЕР
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Направление ветра:{' '}
               {weather.wind?.deg
-                ? WIND_DEG_TEXT[Math.trunc(weather.wind.deg / 22.5)]
-                : ''}
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+                ? WIND_DEG_TEXT[Math.trunc(weather.wind.deg / DEG_PER_SECTOR)]
+                : ''}{' '}
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Скорость ветра: {weather.wind?.speed ? weather.wind.speed : 0} м/с
-            </Text>
+            </WeatherText>
           </View>
 
           <View>
-            <Text
-              style={[
-                styles.title_section,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            <WeatherText
+              style={[styles.titleSection, styles.sectionParamShadow]}
+              color={color}
+              shadow={shadow}>
               ВОСХОД и ЗАКАТ
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Восход солнца: {weather.sys?.sunrise ? weather.sys.sunrise : ''}
-            </Text>
-            <Text
-              style={[
-                styles.section_param,
-                styles.section_param_shadow,
-                { color: color, textShadowColor: shadow },
-              ]}>
+            </WeatherText>
+            <WeatherText color={color} shadow={shadow}>
               Закат солнца: {weather.sys?.sunset ? weather.sys.sunset : ''}
-            </Text>
+            </WeatherText>
           </View>
 
-          <Text
-            style={[
-              styles.margin,
-              styles.section_param_shadow,
-              { color: color, textShadowColor: shadow },
-            ]}>
+          <WeatherText color={color} shadow={shadow}>
             Данные обновлены: {weather?.dt ? weather.dt : 'dd/mm/yyyy hh:mm:ss'}
-          </Text>
+          </WeatherText>
         </SafeAreaView>
       </ScrollView>
     </ImageBackground>
   );
 };
 
+const WeatherText = ({ children, style, color, shadow }) => (
+  <Text
+    style={[
+      style,
+      styles.sectionParam,
+      styles.sectionParamShadow,
+      { color, textShadowColor: shadow },
+    ]}>
+    {children}
+  </Text>
+);
+
 const styles = StyleSheet.create({
-  conteainer: {
+  container: {
     margin: 8,
   },
   currentCity: {
@@ -396,35 +364,31 @@ const styles = StyleSheet.create({
   temp: {
     textAlign: 'center',
     fontSize: 70,
-    fontWeight: 600,
+    fontWeight: '600',
   },
-  temp_max_min: {
+  tempMaxMin: {
     textAlign: 'center',
-    fontWeight: 600,
+    fontWeight: '600',
   },
-  temp_min: {
+  tempMin: {
     textAlign: 'center',
-    fontWeight: 400,
+    fontWeight: '400',
   },
   weather: {
     textAlign: 'center',
   },
-  title_section: {
-    fontWeight: 600,
+  titleSection: {
+    fontWeight: '600',
     marginTop: 12,
     fontSize: 24,
   },
-  section_param: {
+  sectionParam: {
     paddingTop: 4,
     fontSize: 20,
   },
-  section_param_shadow: {
-    textShadowOffset: { width: 5, height: 5 },
-    textShadowRadius: 15,
-  },
-  margin: {
-    marginBottom: 8,
-    paddingTop: 4,
+  sectionParamShadow: {
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 20,
   },
 
   centeredView: {
