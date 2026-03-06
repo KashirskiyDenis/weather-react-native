@@ -14,7 +14,7 @@ import {
   View,
   RefreshControl,
 } from 'react-native';
-import Config from 'react-native-config'
+import Config from 'react-native-config';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const APP_ID = Config.OPENWEATHER_API_KEY;
@@ -39,7 +39,6 @@ const WIND_DEG_TEXT = [
   'ЗСЗ',
   'Северо-западный',
   'ССЗ',
-  'Северный',
 ];
 const IMAGES = {
   i01d: require('./images/01d.jpg'),
@@ -55,28 +54,35 @@ const IMAGES = {
   i50d: require('./images/50d.jpg'),
   i50n: require('./images/50n.jpg'),
 };
+const ARRAY_ICON = [
+  '01n',
+  '50d',
+  '50n',
+  '11n',
+  '13n',
+  '02n',
+  '09n',
+  '09d',
+  '10d',
+];
 
 const Weather = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [city, setCity] = useState('Astrakhan');
   const [weather, setWeather] = useState({});
-  const [url, setUrl] = useState(
-    `${BASE_URL}weather?q=Astrakhan&appid=${APP_ID}&units=${UNITS}&lang=ru`
-  );
   const [modalVisible, setModalVisible] = useState(false);
   const [text, setText] = useState('');
-  const [bgImage, setBgImage] = useState(0);
+  const [bgImage, setBgImage] = useState(null);
   const [color, setColor] = useState('#000000');
-  const [shadow, setShadow] = useState('#ffffff');
 
-  const changeUrl = (q = '', lat, lon) => {
+  const buildUrl = (q = '', lat, lon) => {
     let str = '';
     if (q !== '')
       str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
     else
       str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
 
-    setUrl(str);
+    return str;
   };
 
   const pressLocation = () => {
@@ -86,18 +92,16 @@ const Weather = () => {
 
   const changeCity = () => {
     if (text.trim().length === 0) {
-      setModalVisible(!modalVisible);
+      setModalVisible(false);
       return;
     }
-    setCity(text.trim());
-    changeUrl(text.trim());
-    setModalVisible(!modalVisible);
+    setModalVisible(false);
+    updateWeather(text.trim());
   };
 
   useEffect(() => {
-    console.log(url);
-    updateWeather();
-  }, [url]);
+    updateWeather(city);
+  }, []);
 
   const addZero = (num) => (num < 10 ? '0' + num : num);
 
@@ -120,55 +124,47 @@ const Weather = () => {
   };
 
   const changeColor = (icon) => {
-    if (
-      icon === '01n' ||
-      icon === '50d' ||
-      icon === '50n' ||
-      icon === '11n' ||
-      icon === '13n' ||
-      icon === '02n' ||
-      icon === '09n' ||
-      icon === '09d' ||
-      icon === '10d'
-    ) {
+    if (ARRAY_ICON.includes(icon)) {
       setColor('#ffffff');
-      setShadow('#000000');
     } else {
       setColor('#000000');
-      setShadow('#ffffff');
     }
   };
 
-  const updateWeather = async () => {
+  const updateWeather = async (newCity) => {
     setRefreshing(true);
 
     try {
-      let response = await fetch(url);
+      let response = await fetch(buildUrl(newCity));
 
       if (!response.ok) {
-        Alert.alert('Ошибка', 'Город не найден. 2,0');
+        setRefreshing(false);
+        Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
+      setCity(newCity);
 
       let data = await response.json();
       let date = new Date();
+      let icon = changeBackground(data.weather[0].icon);
       let offset = Math.abs(date.getTimezoneOffset() * 60);
-      let weather = {};
-      weather.dt = toHumanDate(data.dt);
-      weather.main.pressure = Math.round(data.main.pressure * HPA_TO_MMHG);
-      weather.sys.sunrise = toHumanDate(
+      let newWeather = structuredClone(data);
+
+      newWeather.dt = toHumanDate(data.dt);
+      newWeather.main.pressure = Math.round(data.main.pressure * HPA_TO_MMHG);
+      newWeather.sys.sunrise = toHumanDate(
         data.sys.sunrise - offset + data.timezone
       ).split(' ')[1];
-      weather.sys.sunset = toHumanDate(
+      newWeather.sys.sunset = toHumanDate(
         data.sys.sunset - offset + data.timezone
       ).split(' ')[1];
-      weather.weather[0].icon = changeBackground(data.weather[0].icon);
-      changeColor(data.weather[0].icon);
-      setWeather(weather);
-    } catch (error) {
-      Alert.alert('Ошибка', 'Ошибка сети. Проверьте подключение.');
 
-      console.log(error.message);
+      changeColor(icon);
+      setWeather(newWeather);
+    } catch (error) {
+      Alert.alert('Ошибка', 'Ошибка сети. Проверьте подключение.', [
+        { text: 'OK' },
+      ]);
     } finally {
       setRefreshing(false);
     }
@@ -176,18 +172,16 @@ const Weather = () => {
 
   return (
     <ImageBackground
-      source={IMAGES['i01d']}//bgImage}
+      source={bgImage}
       resizeMode="cover"
-      style={{
-        height: null,
-        resizeMode: 'cover',
-        overflow: 'hidden',
-        flex: 1,
-      }}>
+      style={styles.background}>
       <ScrollView
         style={styles.container}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={updateWeather} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => updateWeather(city)}
+          />
         }>
         <SafeAreaView style={styles.droidSafeArea}>
           <Modal
@@ -195,7 +189,7 @@ const Weather = () => {
             transparent={true}
             visible={modalVisible}
             onRequestClose={() => {
-              setModalVisible(!modalVisible);
+              setModalVisible(false);
             }}>
             <View style={styles.centeredView}>
               <View style={styles.modalView}>
@@ -210,125 +204,87 @@ const Weather = () => {
                   <Button title="ОК" onPress={changeCity} />
                   <Button
                     title="Отмена"
-                    onPress={() => setModalVisible(!modalVisible)}
+                    onPress={() => setModalVisible(false)}
                   />
                 </View>
               </View>
             </View>
           </Modal>
 
-          <Text
-            style={[
-              styles.sectionParam,
-              { fontSize: 16 },
-              styles.sectionParamShadow,
-            ]}>
-            Текущее место{' '}
-            <Text style={styles.currentCity} onPress={pressLocation}>
-              {city}
+          <WeatherText style={styles.city} color={color}>
+            {weather?.name ? weather.name : ''}{' '}
+            <Text
+              style={[
+                styles.positionIndicatorColor,
+                { textShadowColor: 'transparent' },
+              ]}
+              onPress={pressLocation}>
+              &#8982;
             </Text>
-            . Нажмите чтобы изменить.
-          </Text>
-          <Text
-            style={[
-              styles.city,
-              styles.sectionParamShadow,
-              { color: color, textShadowColor: shadow },
-            ]}>
-            {weather?.name ? weather.name : ''}
-          </Text>
-          <Text
-            style={[
-              styles.temp,
-              styles.sectionParamShadow,
-              { color: color, textShadowColor: shadow },
-            ]}>
-            {weather.main?.temp ? weather.main.temp + '°' : '-'}
-          </Text>
-          <Text
-            style={[
-              styles.tempMaxMin,
-              styles.sectionParamShadow,
-              { color: color, textShadowColor: shadow },
-            ]}>
-            {weather.main?.temp_max ? weather.main.temp_max : 0}°C /{' '}
-            <Text style={styles.tempMin}>
-              {weather.main?.temp_min ? weather.main.temp_min : 0}°C
-            </Text>
-          </Text>
-          <Text
-            style={[
-              styles.weather,
-              styles.sectionParamShadow,
-              { color: color, textShadowColor: shadow },
-            ]}>
+          </WeatherText>
+          <WeatherText style={styles.temp} color={color}>
+            {(weather.main?.temp ?? '-') + '°'}
+          </WeatherText>
+          <WeatherText style={styles.tempMaxMin} color={color}>
+            {weather.main?.temp_max ?? 0}°C /{' '}
+            <Text style={styles.tempMin}>{weather.main?.temp_min ?? 0}°C</Text>
+          </WeatherText>
+          <WeatherText style={styles.weather} color={color}>
             {weather?.weather
               ? weather.weather[0].description[0].toUpperCase() +
                 weather.weather[0].description.substring(1)
               : ''}
-          </Text>
+          </WeatherText>
 
           <View>
-            <WeatherText
-              style={[styles.titleSection, styles.sectionParamShadow]}
-              color={color}
-              shadow={shadow}>
+            <WeatherText style={styles.title} color={color}>
               КОМФОРТ
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
-              Ощущается как:
-              {weather.main?.feels_like ? weather.main.feels_like : 0}
-              °C
+            <WeatherText color={color}>
+              Ощущается как: {weather.main?.feels_like ?? 0}°C
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
+            <WeatherText color={color}>
               Влажность: {weather.main?.humidity ?? 0}%
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
-              Облачность: {weather.clouds?.all ? weather.clouds.all : 0}%
+            <WeatherText color={color}>
+              Облачность: {weather.clouds?.all ?? 0}%
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
-              Давление : {weather.main?.pressure ? weather.main.pressure : 0} мм
-              рт.ст.
+            <WeatherText color={color}>
+              Давление : {weather.main?.pressure ?? 0} мм рт.ст.
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
-              Видимость : {weather?.visibility ? weather.visibility : 0} м
+            <WeatherText color={color}>
+              Видимость : {weather?.visibility ?? 0} м
             </WeatherText>
           </View>
 
           <View>
-            <WeatherText
-              style={[styles.titleSection, styles.sectionParamShadow]}
-              color={color}
-              shadow={shadow}>
+            <WeatherText style={styles.title} color={color}>
               ВЕТЕР
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
+            <WeatherText color={color}>
               Направление ветра:{' '}
               {weather.wind?.deg
                 ? WIND_DEG_TEXT[Math.trunc(weather.wind.deg / DEG_PER_SECTOR)]
                 : ''}{' '}
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
-              Скорость ветра: {weather.wind?.speed ? weather.wind.speed : 0} м/с
+            <WeatherText color={color}>
+              Скорость ветра: {weather.wind?.speed ?? 0} м/с
             </WeatherText>
           </View>
 
           <View>
-            <WeatherText
-              style={[styles.titleSection, styles.sectionParamShadow]}
-              color={color}
-              shadow={shadow}>
+            <WeatherText style={styles.title} color={color}>
               ВОСХОД и ЗАКАТ
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
+            <WeatherText color={color}>
               Восход солнца: {weather.sys?.sunrise ? weather.sys.sunrise : ''}
             </WeatherText>
-            <WeatherText color={color} shadow={shadow}>
+            <WeatherText color={color}>
               Закат солнца: {weather.sys?.sunset ? weather.sys.sunset : ''}
             </WeatherText>
           </View>
 
-          <WeatherText color={color} shadow={shadow}>
+          <WeatherText style={styles.updateInfo} color={color}>
             Данные обновлены: {weather?.dt ? weather.dt : 'dd/mm/yyyy hh:mm:ss'}
           </WeatherText>
         </SafeAreaView>
@@ -337,13 +293,12 @@ const Weather = () => {
   );
 };
 
-const WeatherText = ({ children, style, color, shadow }) => (
+const WeatherText = ({ style, color, children }) => (
   <Text
     style={[
+      { marginBottom: 2 },
+      color === '#ffffff' ? styles.whiteFont : styles.blackFont,
       style,
-      styles.sectionParam,
-      styles.sectionParamShadow,
-      { color, textShadowColor: shadow },
     ]}>
     {children}
   </Text>
@@ -351,9 +306,27 @@ const WeatherText = ({ children, style, color, shadow }) => (
 
 const styles = StyleSheet.create({
   container: {
-    margin: 8,
+    padding: 8,
   },
-  currentCity: {
+  background: {
+    height: null,
+    resizeMode: 'cover',
+    overflow: 'hidden',
+    flex: 1,
+  },
+  whiteFont: {
+    color: '#ffffff',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  blackFont: {
+    color: '#000000',
+    textShadowColor: '#ffffff',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 5,
+  },
+  positionIndicatorColor: {
     color: '#92c2f2',
   },
   city: {
@@ -363,7 +336,7 @@ const styles = StyleSheet.create({
   },
   temp: {
     textAlign: 'center',
-    fontSize: 70,
+    fontSize: 72,
     fontWeight: '600',
   },
   tempMaxMin: {
@@ -377,19 +350,13 @@ const styles = StyleSheet.create({
   weather: {
     textAlign: 'center',
   },
-  titleSection: {
+  title: {
     fontWeight: '600',
     marginTop: 12,
+    marginBottom: 2,
     fontSize: 24,
   },
-  sectionParam: {
-    paddingTop: 4,
-    fontSize: 20,
-  },
-  sectionParamShadow: {
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 20,
-  },
+  updateInfo: { fontSize: 12, paddingTop: 8 },
 
   centeredView: {
     flex: 1,
