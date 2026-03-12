@@ -14,10 +14,9 @@ import {
   View,
   RefreshControl,
 } from 'react-native';
-import Config from 'react-native-config';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
-const APP_ID = Config.OPENWEATHER_API_KEY;
+const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
 const UNITS = 'metric';
 const HPA_TO_MMHG = 0.750062; // 1 гПа = 0.750062 мм рт.ст.
 const COMPASS_SECTORS = 16;
@@ -82,6 +81,7 @@ const Weather = () => {
     else
       str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
 
+    console.log(str)
     return str;
   };
 
@@ -138,11 +138,10 @@ const Weather = () => {
       let response = await fetch(buildUrl(newCity));
 
       if (!response.ok) {
-        setRefreshing(false);
         Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
-      setCity(newCity);
+      setCity(text.trim());
 
       let data = await response.json();
       let date = new Date();
@@ -172,135 +171,138 @@ const Weather = () => {
 
   return (
     <ImageBackground
-      source={bgImage}
-      resizeMode="cover"
-      style={styles.background}>
-      <ScrollView
-        style={styles.container}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => updateWeather(city)}
-          />
-        }>
-        <SafeAreaView style={styles.droidSafeArea}>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {
-              setModalVisible(false);
-            }}>
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
-                <TextInput
-                  style={styles.modalText}
-                  placeholder="Введите название города"
-                  onChangeText={setText}
-                  value={text}
-                />
-                <View style={styles.fixToText}>
-                  <Button title="ОК" onPress={changeCity} />
-                  <Button
-                    title="Отмена"
-                    onPress={() => setModalVisible(false)}
-                  />
-                </View>
-              </View>
-            </View>
-          </Modal>
+    source={bgImage}
+    resizeMode="cover"
+    style={styles.background}>
+    <ScrollView
+    style={styles.container}
+    refreshControl={
+      <RefreshControl
+      refreshing={refreshing}
+      onRefresh={() => updateWeather(city)}
+      />
+    }>
+    <SafeAreaView style={styles.droidSafeArea}>
+    <Modal
+    animationType="slide"
+    transparent={true}
+    visible={modalVisible}
+    onRequestClose={() => {
+      setModalVisible(false);
+    }}>
+    <View style={styles.centeredView}>
+    <View style={styles.modalView}>
+    <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
+    <TextInput
+    style={styles.modalText}
+    placeholder="Введите название города"
+    onChangeText={setText}
+    value={text}
+    />
+    <View style={styles.fixToText}>
+    <Button title="ОК" onPress={changeCity} />
+    <Button
+    title="Отмена"
+    onPress={() => setModalVisible(false)}
+    />
+    </View>
+    </View>
+    </View>
+    </Modal>
 
-          <WeatherText style={styles.city} color={color}>
-            {weather?.name ? weather.name : ''}{' '}
-            <Text
-              style={[
-                styles.positionIndicatorColor,
-                { textShadowColor: 'transparent' },
-              ]}
-              onPress={pressLocation}>
-              &#8982;
-            </Text>
-          </WeatherText>
-          <WeatherText style={styles.temp} color={color}>
-            {(weather.main?.temp ?? '-') + '°'}
-          </WeatherText>
-          <WeatherText style={styles.tempMaxMin} color={color}>
-            {weather.main?.temp_max ?? 0}°C /{' '}
-            <Text style={styles.tempMin}>{weather.main?.temp_min ?? 0}°C</Text>
-          </WeatherText>
-          <WeatherText style={styles.weather} color={color}>
-            {weather?.weather
-              ? weather.weather[0].description[0].toUpperCase() +
-                weather.weather[0].description.substring(1)
-              : ''}
-          </WeatherText>
+    <WeatherText style={styles.city} color={color}>
+    {weather?.name ? weather.name : ''}{' '}
+    <Text
+    style={[
+      styles.positionIndicatorColor,
+      { textShadowColor: 'transparent' },
+    ]}
+    onPress={pressLocation}>
+    &#8982;
+    </Text>
+    </WeatherText>
+    <WeatherText style={styles.temp} color={color}>
+    {(weather.main?.temp ?? '-') + '°'}
+    </WeatherText>
+    <WeatherText style={styles.tempMaxMin} color={color}>
+    {weather.main?.temp_max ?? 0}°C /{' '}
+    <Text style={styles.tempMin}>{weather.main?.temp_min ?? 0}°C</Text>
+    </WeatherText>
+    <WeatherText style={styles.weather} color={color}>
+    {weather?.weather
+      ? weather.weather[0].description[0].toUpperCase() +
+      weather.weather[0].description.substring(1)
+      : ''}
+      </WeatherText>
 
-          <View>
-            <WeatherText style={styles.title} color={color}>
-              КОМФОРТ
-            </WeatherText>
-            <WeatherText color={color}>
-              Ощущается как: {weather.main?.feels_like ?? 0}°C
-            </WeatherText>
-            <WeatherText color={color}>
-              Влажность: {weather.main?.humidity ?? 0}%
-            </WeatherText>
-            <WeatherText color={color}>
-              Облачность: {weather.clouds?.all ?? 0}%
-            </WeatherText>
-            <WeatherText color={color}>
-              Давление : {weather.main?.pressure ?? 0} мм рт.ст.
-            </WeatherText>
-            <WeatherText color={color}>
-              Видимость : {weather?.visibility ?? 0} м
-            </WeatherText>
-          </View>
+      <View>
+      <WeatherText style={styles.title} color={color}>
+      КОМФОРТ
+      </WeatherText>
+      <WeatherText color={color}>
+      Ощущается как: {weather.main?.feels_like ?? 0}°C
+      </WeatherText>
+      <WeatherText color={color}>
+      Влажность: {weather.main?.humidity ?? 0}%
+      </WeatherText>
+      <WeatherText color={color}>
+      Облачность: {weather.clouds?.all ?? 0}%
+      </WeatherText>
+      <WeatherText color={color}>
+      Давление : {weather.main?.pressure ?? 0} мм рт.ст.
+      </WeatherText>
+      <WeatherText color={color}>
+      Видимость : {weather?.visibility ?? 0} м
+      </WeatherText>
+      </View>
 
-          <View>
-            <WeatherText style={styles.title} color={color}>
-              ВЕТЕР
-            </WeatherText>
-            <WeatherText color={color}>
-              Направление ветра:{' '}
-              {weather.wind?.deg
-                ? WIND_DEG_TEXT[Math.trunc(weather.wind.deg / DEG_PER_SECTOR)]
-                : ''}{' '}
-            </WeatherText>
-            <WeatherText color={color}>
-              Скорость ветра: {weather.wind?.speed ?? 0} м/с
-            </WeatherText>
-          </View>
+      <View>
+      <WeatherText style={styles.title} color={color}>
+      ВЕТЕР
+      </WeatherText>
+      <WeatherText color={color}>
+      Направление ветра:{' '}
+      {weather.wind?.deg
+        ? WIND_DEG_TEXT[
+          Math.trunc(weather.wind.deg / DEG_PER_SECTOR) %
+          COMPASS_SECTORS
+        ]
+        : ''}{' '}
+        </WeatherText>
+        <WeatherText color={color}>
+        Скорость ветра: {weather.wind?.speed ?? 0} м/с
+        </WeatherText>
+        </View>
 
-          <View>
-            <WeatherText style={styles.title} color={color}>
-              ВОСХОД и ЗАКАТ
-            </WeatherText>
-            <WeatherText color={color}>
-              Восход солнца: {weather.sys?.sunrise ? weather.sys.sunrise : ''}
-            </WeatherText>
-            <WeatherText color={color}>
-              Закат солнца: {weather.sys?.sunset ? weather.sys.sunset : ''}
-            </WeatherText>
-          </View>
+        <View>
+        <WeatherText style={styles.title} color={color}>
+        ВОСХОД и ЗАКАТ
+        </WeatherText>
+        <WeatherText color={color}>
+        Восход солнца: {weather.sys?.sunrise ?? ''}
+        </WeatherText>
+        <WeatherText color={color}>
+        Закат солнца: {weather.sys?.sunset ?? ''}
+        </WeatherText>
+        </View>
 
-          <WeatherText style={styles.updateInfo} color={color}>
-            Данные обновлены: {weather?.dt ? weather.dt : 'dd/mm/yyyy hh:mm:ss'}
-          </WeatherText>
+        <WeatherText style={styles.updateInfo} color={color}>
+        Данные обновлены: {weather?.dt ?? 'dd/mm/yyyy hh:mm:ss'}
+        </WeatherText>
         </SafeAreaView>
-      </ScrollView>
-    </ImageBackground>
+        </ScrollView>
+        </ImageBackground>
   );
 };
 
 const WeatherText = ({ style, color, children }) => (
   <Text
-    style={[
-      { marginBottom: 2 },
-      color === '#ffffff' ? styles.whiteFont : styles.blackFont,
-      style,
-    ]}>
-    {children}
+  style={[
+    { marginBottom: 2 },
+    color === '#ffffff' ? styles.whiteFont : styles.blackFont,
+    style,
+  ]}>
+  {children}
   </Text>
 );
 
