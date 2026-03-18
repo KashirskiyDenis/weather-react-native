@@ -4,10 +4,8 @@ import {
   Button,
   ImageBackground,
   Modal,
-  Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -23,21 +21,21 @@ const COMPASS_SECTORS = 16;
 const DEG_PER_SECTOR = 360 / COMPASS_SECTORS; // 22.5°
 const WIND_DEG_TEXT = [
   'Северный',
-'ССВ',
-'Северо-восточный',
-'ВСВ',
-'Восточный',
-'ВЮВ',
-'Юго-восточный',
-'ЮЮВ',
-'Южный',
-'ЮЮЗ',
-'Юго-западный',
-'ЗЮЗ',
-'Западный',
-'ЗСЗ',
-'Северо-западный',
-'ССЗ',
+  'ССВ',
+  'Северо-восточный',
+  'ВСВ',
+  'Восточный',
+  'ВЮВ',
+  'Юго-восточный',
+  'ЮЮВ',
+  'Южный',
+  'ЮЮЗ',
+  'Юго-западный',
+  'ЗЮЗ',
+  'Западный',
+  'ЗСЗ',
+  'Северо-западный',
+  'ССЗ',
 ];
 const IMAGES = {
   i01d: require('./images/01d.jpg'),
@@ -55,14 +53,14 @@ const IMAGES = {
 };
 const ARRAY_ICON = [
   '01n',
-'50d',
-'50n',
-'11n',
-'13n',
-'02n',
-'09n',
-'09d',
-'10d',
+  '50d',
+  '50n',
+  '11n',
+  '13n',
+  '02n',
+  '09n',
+  '09d',
+  '10d',
 ];
 
 const buildUrl = (q = '', lat, lon) => {
@@ -157,142 +155,138 @@ const Weather = () => {
 
   return (
     <SafeAreaProvider>
-    <ImageBackground
-    source={bgImage}
-    resizeMode="cover"
-    style={styles.background}>
-    <SafeAreaView style={styles.droidSafeArea}>
-    <ScrollView
-    style={styles.container}
-    refreshControl={
-      <RefreshControl
-      refreshing={refreshing}
-      onRefresh={() => updateWeather(city)}
-      />
-    }>
-    <Modal
-    animationType="slide"
-    transparent={true}
-    visible={modalVisible}
-    onRequestClose={() => {
-      setModalVisible(false);
-    }}>
-    <View style={styles.centeredView}>
-    <View style={styles.modalView}>
-    <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
-    <TextInput
-    style={styles.modalText}
-    placeholder="Введите название города"
-    onChangeText={setText}
-    value={text}
-    />
-    <View style={styles.fixToText}>
-    <Button title="ОК" onPress={changeCity} />
-    <Button
-    title="Отмена"
-    onPress={() => setModalVisible(false)}
-    />
-    </View>
-    </View>
-    </View>
-    </Modal>
-
-    <WeatherText style={styles.city} color={color}>
-    {weather?.name ? weather.name : ''}{' '}
-    <Text
-    style={[
-      styles.positionIndicatorColor,
-      { textShadowColor: 'transparent' },
-    ]}
-    onPress={pressLocation}>
-    &#8982;
-    </Text>
-    </WeatherText>
-    <WeatherText style={styles.temp} color={color}>
-    {(weather.main?.temp ?? '-') + '°'}
-    </WeatherText>
-    <WeatherText style={styles.tempMaxMin} color={color}>
-    {weather.main?.temp_max ?? '-'}°C /{' '}
-    <Text style={styles.tempMin}>
-    {weather.main?.temp_min ?? '-'}°C
-    </Text>
-    </WeatherText>
-    <WeatherText style={styles.weather} color={color}>
-    {weather?.weather
-      ? weather.weather[0].description[0].toUpperCase() +
-      weather.weather[0].description.substring(1)
-      : ''}
-      </WeatherText>
-
-      <View>
-      <WeatherText style={styles.title} color={color}>
-      КОМФОРТ
-      </WeatherText>
-      <WeatherText color={color}>
-      Ощущается как: {weather.main?.feels_like ?? '-'}°C
-      </WeatherText>
-      <WeatherText color={color}>
-      Влажность: {weather.main?.humidity ?? '-'}%
-      </WeatherText>
-      <WeatherText color={color}>
-      Облачность: {weather.clouds?.all ?? '-'}%
-      </WeatherText>
-      <WeatherText color={color}>
-      Давление : {weather.main?.pressure ?? '-'} мм рт.ст.
-      </WeatherText>
-      <WeatherText color={color}>
-      Видимость : {weather?.visibility ?? '-'} м
-      </WeatherText>
-      </View>
-
-      <View>
-      <WeatherText style={styles.title} color={color}>
-      ВЕТЕР
-      </WeatherText>
-      <WeatherText color={color}>
-      Направление ветра:{' '}
-      {weather.wind?.deg
-        ? WIND_DEG_TEXT[
-          Math.round(weather.wind.deg / DEG_PER_SECTOR) %
-          COMPASS_SECTORS
-        ]
-        : ''}{' '}
-        </WeatherText>
-        <WeatherText color={color}>
-        Скорость ветра: {weather.wind?.speed ?? '-'} м/с
-        </WeatherText>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
+            <TextInput
+              style={styles.modalText}
+              placeholder="Введите название города"
+              onChangeText={setText}
+              value={text}
+            />
+            <View style={styles.fixToText}>
+              <Button title="ОК" onPress={changeCity} />
+              <Button title="Отмена" onPress={() => setModalVisible(false)} />
+            </View>
+          </View>
         </View>
+      </Modal>
+      <ImageBackground
+        source={bgImage}
+        resizeMode="cover"
+        style={styles.background}>
+        <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+          <ScrollView
+            style={styles.container}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => updateWeather(city)}
+              />
+            }>
+            <WeatherText style={styles.city} color={color}>
+              {weather?.name ? weather.name : ''}{' '}
+              <Text
+                style={[
+                  styles.positionIndicatorColor,
+                  { textShadowColor: 'transparent' },
+                ]}
+                onPress={pressLocation}>
+                &#8982;
+              </Text>
+            </WeatherText>
+            <WeatherText style={styles.temp} color={color}>
+              {(weather.main?.temp ?? '-') + '°'}
+            </WeatherText>
+            <WeatherText style={styles.tempMaxMin} color={color}>
+              {weather.main?.temp_max ?? '-'}°C /{' '}
+              <Text style={styles.tempMin}>
+                {weather.main?.temp_min ?? '-'}°C
+              </Text>
+            </WeatherText>
+            <WeatherText style={styles.weather} color={color}>
+              {weather?.weather
+                ? weather.weather[0].description[0].toUpperCase() +
+                  weather.weather[0].description.substring(1)
+                : ''}
+            </WeatherText>
 
-        <View>
-        <WeatherText style={styles.title} color={color}>
-        ВОСХОД и ЗАКАТ
-        </WeatherText>
-        <WeatherText color={color}>
-        Восход солнца: {weather.sys?.sunrise ?? '-'}
-        </WeatherText>
-        <WeatherText color={color}>
-        Закат солнца: {weather.sys?.sunset ?? '-'}
-        </WeatherText>
-        </View>
+            <View>
+              <WeatherText style={styles.title} color={color}>
+                КОМФОРТ
+              </WeatherText>
+              <WeatherText color={color}>
+                Ощущается как: {weather.main?.feels_like ?? '-'}°C
+              </WeatherText>
+              <WeatherText color={color}>
+                Влажность: {weather.main?.humidity ?? '-'}%
+              </WeatherText>
+              <WeatherText color={color}>
+                Облачность: {weather.clouds?.all ?? '-'}%
+              </WeatherText>
+              <WeatherText color={color}>
+                Давление : {weather.main?.pressure ?? '-'} мм рт.ст.
+              </WeatherText>
+              <WeatherText color={color}>
+                Видимость : {weather?.visibility ?? '-'} м
+              </WeatherText>
+            </View>
 
-        <WeatherText style={styles.updateInfo} color={color}>
-        Данные обновлены: {weather?.dt ?? 'dd.mm.yyyy hh:mm:ss'}
-        </WeatherText>
-        </ScrollView>
+            <View>
+              <WeatherText style={styles.title} color={color}>
+                ВЕТЕР
+              </WeatherText>
+              <WeatherText color={color}>
+                Направление ветра:{' '}
+                {weather.wind?.deg
+                  ? WIND_DEG_TEXT[
+                      Math.round(weather.wind.deg / DEG_PER_SECTOR) %
+                        COMPASS_SECTORS
+                    ]
+                  : ''}{' '}
+              </WeatherText>
+              <WeatherText color={color}>
+                Скорость ветра: {weather.wind?.speed ?? '-'} м/с
+              </WeatherText>
+            </View>
+
+            <View>
+              <WeatherText style={styles.title} color={color}>
+                ВОСХОД и ЗАКАТ
+              </WeatherText>
+              <WeatherText color={color}>
+                Восход солнца: {weather.sys?.sunrise ?? '-'}
+              </WeatherText>
+              <WeatherText color={color}>
+                Закат солнца: {weather.sys?.sunset ?? '-'}
+              </WeatherText>
+            </View>
+
+            <WeatherText style={styles.updateInfo} color={color}>
+              Данные обновлены: {weather?.dt ?? 'dd.mm.yyyy hh:mm:ss'}
+            </WeatherText>
+          </ScrollView>
         </SafeAreaView>
-        </ImageBackground>
-        </SafeAreaProvider>
+      </ImageBackground>
+    </SafeAreaProvider>
   );
 };
 
 const WeatherText = ({ style, color, children }) => (
   <Text
-  style={[
-    { marginBottom: 2 },
-    color === '#ffffff' ? styles.whiteFont : styles.blackFont,
-    style,
-  ]}>
-  {children}
+    style={[
+      { marginBottom: 2 },
+      color === '#ffffff' ? styles.whiteFont : styles.blackFont,
+      style,
+    ]}>
+    {children}
   </Text>
 );
 
@@ -301,8 +295,6 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   background: {
-    height: null,
-    resizeMode: 'cover',
     overflow: 'hidden',
     flex: 1,
   },
@@ -324,7 +316,7 @@ const styles = StyleSheet.create({
   city: {
     fontSize: 24,
     textAlign: 'center',
-    marginTop: 8,
+    paddingTop: 8,
   },
   temp: {
     textAlign: 'center',
@@ -358,7 +350,6 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: '80%',
-    margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 15,
@@ -370,9 +361,6 @@ const styles = StyleSheet.create({
   fixToText: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  droidSafeArea: {
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
 });
 
