@@ -5,15 +5,15 @@ import {
   ImageBackground,
   Modal,
   Platform,
-  SafeAreaView,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
   View,
-  RefreshControl,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
@@ -23,21 +23,21 @@ const COMPASS_SECTORS = 16;
 const DEG_PER_SECTOR = 360 / COMPASS_SECTORS; // 22.5°
 const WIND_DEG_TEXT = [
   'Северный',
-  'ССВ',
-  'Северо-восточный',
-  'ВСВ',
-  'Восточный',
-  'ВЮВ',
-  'Юго-восточный',
-  'ЮЮВ',
-  'Южный',
-  'ЮЮЗ',
-  'Юго-западный',
-  'ЗЮЗ',
-  'Западный',
-  'ЗСЗ',
-  'Северо-западный',
-  'ССЗ',
+'ССВ',
+'Северо-восточный',
+'ВСВ',
+'Восточный',
+'ВЮВ',
+'Юго-восточный',
+'ЮЮВ',
+'Южный',
+'ЮЮЗ',
+'Юго-западный',
+'ЗЮЗ',
+'Западный',
+'ЗСЗ',
+'Северо-западный',
+'ССЗ',
 ];
 const IMAGES = {
   i01d: require('./images/01d.jpg'),
@@ -55,15 +55,35 @@ const IMAGES = {
 };
 const ARRAY_ICON = [
   '01n',
-  '50d',
-  '50n',
-  '11n',
-  '13n',
-  '02n',
-  '09n',
-  '09d',
-  '10d',
+'50d',
+'50n',
+'11n',
+'13n',
+'02n',
+'09n',
+'09d',
+'10d',
 ];
+
+const buildUrl = (q = '', lat, lon) => {
+  let str = '';
+  if (q !== '')
+    str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
+  else
+    str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
+
+  return str;
+};
+
+const changeBackground = (icon) => {
+  if (icon === '02d' || icon === '03d' || icon === '04d') icon = '02d';
+  if (icon === '09d' || icon === '10d') icon = '09d';
+
+  if (icon === '02n' || icon === '03n' || icon === '04n') icon = '02n';
+  if (icon === '09n' || icon === '10n') icon = '09n';
+
+  return icon;
+};
 
 const Weather = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -73,17 +93,6 @@ const Weather = () => {
   const [text, setText] = useState('');
   const [bgImage, setBgImage] = useState(null);
   const [color, setColor] = useState('#000000');
-
-  const buildUrl = (q = '', lat, lon) => {
-    let str = '';
-    if (q !== '')
-      str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
-    else
-      str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
-
-    console.log(str)
-    return str;
-  };
 
   const pressLocation = () => {
     setText('');
@@ -103,32 +112,13 @@ const Weather = () => {
     updateWeather(city);
   }, []);
 
-  const addZero = (num) => (num < 10 ? '0' + num : num);
+  const formatCityTime = (time, timezone) => {
+    let offset = new Date().getTimezoneOffset() * 60;
 
-  const toHumanDate = (dt) => {
-    let date = new Date(dt * 1000);
-    let dateStr = `${date.getDate()}/${
-      date.getMonth() + 1
-    }/${date.getFullYear()} ${date.getHours()}:${addZero(date.getMinutes())}`;
-    return dateStr;
-  };
-
-  const changeBackground = (icon) => {
-    if (icon === '02d' || icon === '03d' || icon === '04d') icon = '02d';
-    if (icon === '09d' || icon === '10d') icon = '09d';
-
-    if (icon === '02n' || icon === '03n' || icon === '04n') icon = '02n';
-    if (icon === '09n' || icon === '10n') icon = '09n';
-    setBgImage(IMAGES['i' + icon]);
-    return icon;
-  };
-
-  const changeColor = (icon) => {
-    if (ARRAY_ICON.includes(icon)) {
-      setColor('#ffffff');
-    } else {
-      setColor('#000000');
-    }
+    return new Date((time + offset + timezone) * 1000).toLocaleTimeString(
+      'ru-RU',
+      { hour: '2-digit', minute: '2-digit' }
+    );
   };
 
   const updateWeather = async (newCity) => {
@@ -141,24 +131,20 @@ const Weather = () => {
         Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
-      setCity(text.trim());
+      setCity(newCity);
 
       let data = await response.json();
-      let date = new Date();
+      let date = new Date(data.dt * 1000);
       let icon = changeBackground(data.weather[0].icon);
-      let offset = Math.abs(date.getTimezoneOffset() * 60);
       let newWeather = structuredClone(data);
 
-      newWeather.dt = toHumanDate(data.dt);
       newWeather.main.pressure = Math.round(data.main.pressure * HPA_TO_MMHG);
-      newWeather.sys.sunrise = toHumanDate(
-        data.sys.sunrise - offset + data.timezone
-      ).split(' ')[1];
-      newWeather.sys.sunset = toHumanDate(
-        data.sys.sunset - offset + data.timezone
-      ).split(' ')[1];
+      newWeather.sys.sunrise = formatCityTime(data.sys.sunrise, data.timezone);
+      newWeather.sys.sunset = formatCityTime(data.sys.sunset, data.timezone);
+      newWeather.dt = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 
-      changeColor(icon);
+      setColor(ARRAY_ICON.includes(icon) ? '#ffffff' : '#000000');
+      setBgImage(IMAGES['i' + icon]);
       setWeather(newWeather);
     } catch (error) {
       Alert.alert('Ошибка', 'Ошибка сети. Проверьте подключение.', [
@@ -170,10 +156,12 @@ const Weather = () => {
   };
 
   return (
+    <SafeAreaProvider>
     <ImageBackground
     source={bgImage}
     resizeMode="cover"
     style={styles.background}>
+    <SafeAreaView style={styles.droidSafeArea}>
     <ScrollView
     style={styles.container}
     refreshControl={
@@ -182,7 +170,6 @@ const Weather = () => {
       onRefresh={() => updateWeather(city)}
       />
     }>
-    <SafeAreaView style={styles.droidSafeArea}>
     <Modal
     animationType="slide"
     transparent={true}
@@ -225,8 +212,10 @@ const Weather = () => {
     {(weather.main?.temp ?? '-') + '°'}
     </WeatherText>
     <WeatherText style={styles.tempMaxMin} color={color}>
-    {weather.main?.temp_max ?? 0}°C /{' '}
-    <Text style={styles.tempMin}>{weather.main?.temp_min ?? 0}°C</Text>
+    {weather.main?.temp_max ?? '-'}°C /{' '}
+    <Text style={styles.tempMin}>
+    {weather.main?.temp_min ?? '-'}°C
+    </Text>
     </WeatherText>
     <WeatherText style={styles.weather} color={color}>
     {weather?.weather
@@ -240,19 +229,19 @@ const Weather = () => {
       КОМФОРТ
       </WeatherText>
       <WeatherText color={color}>
-      Ощущается как: {weather.main?.feels_like ?? 0}°C
+      Ощущается как: {weather.main?.feels_like ?? '-'}°C
       </WeatherText>
       <WeatherText color={color}>
-      Влажность: {weather.main?.humidity ?? 0}%
+      Влажность: {weather.main?.humidity ?? '-'}%
       </WeatherText>
       <WeatherText color={color}>
-      Облачность: {weather.clouds?.all ?? 0}%
+      Облачность: {weather.clouds?.all ?? '-'}%
       </WeatherText>
       <WeatherText color={color}>
-      Давление : {weather.main?.pressure ?? 0} мм рт.ст.
+      Давление : {weather.main?.pressure ?? '-'} мм рт.ст.
       </WeatherText>
       <WeatherText color={color}>
-      Видимость : {weather?.visibility ?? 0} м
+      Видимость : {weather?.visibility ?? '-'} м
       </WeatherText>
       </View>
 
@@ -264,13 +253,13 @@ const Weather = () => {
       Направление ветра:{' '}
       {weather.wind?.deg
         ? WIND_DEG_TEXT[
-          Math.trunc(weather.wind.deg / DEG_PER_SECTOR) %
+          Math.round(weather.wind.deg / DEG_PER_SECTOR) %
           COMPASS_SECTORS
         ]
         : ''}{' '}
         </WeatherText>
         <WeatherText color={color}>
-        Скорость ветра: {weather.wind?.speed ?? 0} м/с
+        Скорость ветра: {weather.wind?.speed ?? '-'} м/с
         </WeatherText>
         </View>
 
@@ -279,19 +268,20 @@ const Weather = () => {
         ВОСХОД и ЗАКАТ
         </WeatherText>
         <WeatherText color={color}>
-        Восход солнца: {weather.sys?.sunrise ?? ''}
+        Восход солнца: {weather.sys?.sunrise ?? '-'}
         </WeatherText>
         <WeatherText color={color}>
-        Закат солнца: {weather.sys?.sunset ?? ''}
+        Закат солнца: {weather.sys?.sunset ?? '-'}
         </WeatherText>
         </View>
 
         <WeatherText style={styles.updateInfo} color={color}>
-        Данные обновлены: {weather?.dt ?? 'dd/mm/yyyy hh:mm:ss'}
+        Данные обновлены: {weather?.dt ?? 'dd.mm.yyyy hh:mm:ss'}
         </WeatherText>
-        </SafeAreaView>
         </ScrollView>
+        </SafeAreaView>
         </ImageBackground>
+        </SafeAreaProvider>
   );
 };
 
