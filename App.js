@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
@@ -101,6 +102,8 @@ const Weather = () => {
   const [color, setColor] = useState('#000000');
   const controllerRef = useRef(null);
 
+  const [isDarkMode, setIsDarkMode] = useState(null);
+
   const pressLocation = () => {
     setText('');
     setModalVisible(true);
@@ -115,7 +118,15 @@ const Weather = () => {
   };
 
   useEffect(() => {
-    updateWeather(DEFAULT_CITY);
+    const loadData = async () => {
+      const saved = await getSettings('city');
+      if (saved !== null) setIsDarkMode(saved);
+    };
+      loadData();
+
+      console.log('UseEffect: ' + isDarkMode);
+
+      updateWeather(DEFAULT_CITY);
   }, []);
 
   const updateWeather = async (newCity) => {
@@ -141,6 +152,8 @@ const Weather = () => {
         Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
+
+      await AsyncStorage.setItem('city', newCity);
 
       const data = await response.json();
       const date = new Date(data.dt * 1000);
@@ -193,6 +206,7 @@ const Weather = () => {
       if (!controller.signal.aborted || isTimeout) {
         setRefreshing(false);
       }
+      console.log('Update: ' + await AsyncStorage.getItem('city'));
     }
   };
 
