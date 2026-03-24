@@ -117,7 +117,7 @@ const Weather = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const saved = await getSettings('city');
+      const saved = await AsyncStorage.getItem('city');
       if (saved !== null)
         Alert.alert('Последний город', saved, [{ text: 'OK' }]);
     };
