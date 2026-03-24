@@ -102,8 +102,6 @@ const Weather = () => {
   const [color, setColor] = useState('#000000');
   const controllerRef = useRef(null);
 
-  const [isDarkMode, setIsDarkMode] = useState(null);
-
   const pressLocation = () => {
     setText('');
     setModalVisible(true);
@@ -120,13 +118,12 @@ const Weather = () => {
   useEffect(() => {
     const loadData = async () => {
       const saved = await getSettings('city');
-      if (saved !== null) setIsDarkMode(saved);
+      if (saved !== null)
+        Alert.alert('Последний город', saved, [{ text: 'OK' }]);
     };
-      loadData();
+    loadData();
 
-      console.log('UseEffect: ' + isDarkMode);
-
-      updateWeather(DEFAULT_CITY);
+    updateWeather(DEFAULT_CITY);
   }, []);
 
   const updateWeather = async (newCity) => {
@@ -206,7 +203,6 @@ const Weather = () => {
       if (!controller.signal.aborted || isTimeout) {
         setRefreshing(false);
       }
-      console.log('Update: ' + await AsyncStorage.getItem('city'));
     }
   };
 
