@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   Alert,
   Button,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
@@ -101,10 +102,26 @@ const Weather = () => {
   const [bgImage, setBgImage] = useState(null);
   const [color, setColor] = useState('#000000');
   const controllerRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  const pressLocation = () => {
+  const changeCityName = () => {
     setText('');
     setModalVisible(true);
+  };
+
+  const changeCityLocation = () => {
+    async function getCurrentLocation() {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Ошибка', 'Нет доступа к геолокации.', [{ text: 'OK' }]);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      updateWeather('', location.coords.latitude, location.coords.longitude);
+    }
+
+    getCurrentLocation();
   };
 
   const changeCity = () => {
@@ -115,18 +132,7 @@ const Weather = () => {
     updateWeather(text.trim());
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      const saved = await AsyncStorage.getItem('city');
-      if (saved !== null)
-        Alert.alert('Последний город', saved, [{ text: 'OK' }]);
-    };
-    loadData();
-
-    updateWeather(DEFAULT_CITY);
-  }, []);
-
-  const updateWeather = async (newCity) => {
+  const updateWeather = useCallback(async (newCity, lat, lon) => {
     controllerRef.current?.abort();
 
     const controller = new AbortController();
@@ -138,10 +144,10 @@ const Weather = () => {
       controller.abort();
     }, 15000);
 
-    setRefreshing(true);
+    if (isMountedRef.current) setRefreshing(true);
 
     try {
-      const response = await fetch(buildUrl(newCity), {
+      const response = await fetch(buildUrl(newCity, lat, lon), {
         signal: controller.signal,
       });
 
@@ -149,8 +155,6 @@ const Weather = () => {
         Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
-
-      await AsyncStorage.setItem('city', newCity);
 
       const data = await response.json();
       const date = new Date(data.dt * 1000);
@@ -164,21 +168,25 @@ const Weather = () => {
         sys: {
           ...data.sys,
           sunrise: formatCityTime(data.sys.sunrise, data.timezone),
-          sunset: formatCityTime(data.sys.sunset, data.timezone),
+                                    sunset: formatCityTime(data.sys.sunset, data.timezone),
         },
         dt: `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`,
-        weather:
-        data.weather[0].description[0].toUpperCase() +
-        data.weather[0].description.substring(1),
-        wind: {
-          ...data.wind,
-          deg: WIND_DEG_TEXT[
-            Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
-          ],
-        },
+                                    weather:
+                                    data.weather[0].description[0].toUpperCase() +
+                                    data.weather[0].description.substring(1),
+                                    wind: {
+                                      ...data.wind,
+                                      deg: WIND_DEG_TEXT[
+                                        Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
+                                      ],
+                                    },
       };
 
-      setCity(newCity);
+      await AsyncStorage.setItem('city', data.name);
+
+      if (!isMountedRef.current) return;
+
+      setCity(data.name);
       setColor(WHITE_TEXT_ICON_CODES.includes(icon) ? '#ffffff' : '#000000');
       setBgImage(IMAGES['i' + icon]);
       setWeather(formatWeather);
@@ -200,11 +208,39 @@ const Weather = () => {
       }
     } finally {
       clearTimeout(timeoutId);
-      if (!controller.signal.aborted || isTimeout) {
+      if (isMountedRef.current) {
         setRefreshing(false);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const loadAndFetch = async () => {
+      let savedCity = DEFAULT_CITY;
+      try {
+        const saved = await AsyncStorage.getItem('city');
+        if (saved !== null) {
+          savedCity = saved;
+        }
+      } catch (error) {
+        console.error('Ошибка чтения AsyncStorage:', error);
+      }
+
+      if (!isMountedRef.current) return;
+
+      setCity(savedCity);
+      updateWeather(savedCity);
+    };
+
+    loadAndFetch();
+
+    return () => {
+      isMountedRef.current = false;
+      controllerRef.current?.abort();
+    };
+  }, [updateWeather]);
 
   return (
     <SafeAreaProvider>
@@ -245,14 +281,16 @@ const Weather = () => {
       />
     }>
     <WeatherText style={styles.city} color={color}>
+    <Text
+    style={[styles.positionIndicatorColor, styles.symbols]}
+    onPress={changeCityLocation}>
+    &#8982;
+    </Text>{' '}
     {weather?.name ? weather.name : ''}{' '}
     <Text
-    style={[
-      styles.positionIndicatorColor,
-      { textShadowColor: 'transparent' },
-    ]}
-    onPress={pressLocation}>
-    &#8982;
+    style={[styles.positionIndicatorColor, styles.symbols]}
+    onPress={changeCityName}>
+    &#9998;
     </Text>
     </WeatherText>
     <WeatherText style={styles.temp} color={color}>
@@ -282,10 +320,10 @@ const Weather = () => {
     Облачность: {weather.clouds?.all ?? '-'}%
     </WeatherText>
     <WeatherText color={color}>
-    Давление : {weather.main?.pressure ?? '-'} мм рт.ст.
+    Давление: {weather.main?.pressure ?? '-'} мм рт.ст.
     </WeatherText>
     <WeatherText color={color}>
-    Видимость : {weather?.visibility ?? '-'} м
+    Видимость: {weather?.visibility ?? '-'} м
     </WeatherText>
     </View>
 
@@ -341,6 +379,11 @@ const styles = StyleSheet.create({
   background: {
     overflow: 'hidden',
     flex: 1,
+  },
+  symbols: {
+    textShadowColor: 'transparent',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 1,
   },
   whiteFont: {
     color: '#ffffff',
