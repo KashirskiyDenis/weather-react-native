@@ -93,4 +93,4 @@ GET https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=m
 GET https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=ru
 ```
 ## 📄 Лицензия
-Распространяется под лицензией **MIT**. Подробнее см. файл [LICENSE](LICENSE).
+Распространяется под лицензией **MIT**.
