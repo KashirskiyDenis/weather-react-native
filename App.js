@@ -6,6 +6,7 @@ import {
   Modal,
   RefreshControl,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -73,6 +74,7 @@ const ICON_MAP = {
   '04n': '02n',
   '10n': '09n',
 };
+const STYLES = ['default', 'dark-content', 'light-content'];
 
 const buildUrl = (q = '', lat, lon) => {
   let str = '';
@@ -100,28 +102,32 @@ const Weather = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [text, setText] = useState('');
   const [bgImage, setBgImage] = useState(null);
-  const [color, setColor] = useState('#000000');
+  const [isLight, setIsLight] = useState(true);
   const controllerRef = useRef(null);
   const isMountedRef = useRef(true);
+  const [statusBarStyle, setStatusBarStyle] = useState(STYLES[0]);
 
   const changeCityName = () => {
     setText('');
     setModalVisible(true);
   };
 
-  const changeCityLocation = () => {
-    async function getCurrentLocation() {
+  const changeCityLocation = async () => {
+    try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Ошибка', 'Нет доступа к геолокации.', [{ text: 'OK' }]);
         return;
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-      updateWeather('', location.coords.latitude, location.coords.longitude);
+    } catch (error) {
+      Alert.alert('Ошибка', 'Не удалось получить геолокацию.', [
+        { text: 'OK' },
+      ]);
+      return;
     }
 
-    getCurrentLocation();
+    let location = await Location.getCurrentPositionAsync({});
+    updateWeather('', location.coords.latitude, location.coords.longitude);
   };
 
   const changeCity = () => {
@@ -151,7 +157,7 @@ const Weather = () => {
         signal: controller.signal,
       });
 
-      if (!response.ok) {
+      if (response.status != 200) {
         Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
         return;
       }
@@ -187,7 +193,8 @@ const Weather = () => {
       if (!isMountedRef.current) return;
 
       setCity(data.name);
-      setColor(WHITE_TEXT_ICON_CODES.includes(icon) ? '#ffffff' : '#000000');
+      setIsLight(!WHITE_TEXT_ICON_CODES.includes(icon));
+      setStatusBarStyle(WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1]);
       setBgImage(IMAGES['i' + icon]);
       setWeather(formatWeather);
     } catch (error) {
@@ -202,7 +209,7 @@ const Weather = () => {
       } else {
         Alert.alert(
           'Ошибка',
-          'Ошибка сети, проверьте подключение с сети Интернет',
+          'Ошибка сети, проверьте подключение с сети Интернет.',
           [{ text: 'OK' }]
         );
       }
@@ -270,8 +277,10 @@ const Weather = () => {
     <ImageBackground
     source={bgImage}
     resizeMode="cover"
-    style={styles.background}>
+    style={styles.background}
+    blurRadius={1}>
     <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+    <StatusBar animated={true} barStyle={statusBarStyle} />
     <ScrollView
     style={styles.container}
     refreshControl={
@@ -280,7 +289,7 @@ const Weather = () => {
       onRefresh={() => updateWeather(city)}
       />
     }>
-    <WeatherText style={styles.city} color={color}>
+    <WeatherText style={styles.city} isLight={isLight}>
     <Text
     style={[styles.positionIndicatorColor, styles.symbols]}
     onPress={changeCityLocation}>
@@ -293,65 +302,65 @@ const Weather = () => {
     &#9998;
     </Text>
     </WeatherText>
-    <WeatherText style={styles.temp} color={color}>
+    <WeatherText style={styles.temp} isLight={isLight}>
     {(weather.main?.temp ?? '-') + '°'}
     </WeatherText>
-    <WeatherText style={styles.tempMaxMin} color={color}>
+    <WeatherText style={styles.tempMaxMin} isLight={isLight}>
     {weather.main?.temp_max ?? '-'}°C /{' '}
     <Text style={styles.tempMin}>
     {weather.main?.temp_min ?? '-'}°C
     </Text>
     </WeatherText>
-    <WeatherText style={styles.weather} color={color}>
+    <WeatherText style={styles.weather} isLight={isLight}>
     {weather?.weather ?? '-'}
     </WeatherText>
 
     <View>
-    <WeatherText style={styles.title} color={color}>
+    <WeatherText style={styles.title} isLight={isLight}>
     КОМФОРТ
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Ощущается как: {weather.main?.feels_like ?? '-'}°C
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Влажность: {weather.main?.humidity ?? '-'}%
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Облачность: {weather.clouds?.all ?? '-'}%
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Давление: {weather.main?.pressure ?? '-'} мм рт.ст.
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Видимость: {weather?.visibility ?? '-'} м
     </WeatherText>
     </View>
 
     <View>
-    <WeatherText style={styles.title} color={color}>
+    <WeatherText style={styles.title} isLight={isLight}>
     ВЕТЕР
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Направление ветра: {weather.wind?.deg ?? '-'}
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Скорость ветра: {weather.wind?.speed ?? '-'} м/с
     </WeatherText>
     </View>
 
     <View>
-    <WeatherText style={styles.title} color={color}>
+    <WeatherText style={styles.title} isLight={isLight}>
     ВОСХОД и ЗАКАТ
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Восход солнца: {weather.sys?.sunrise ?? '-'}
     </WeatherText>
-    <WeatherText color={color}>
+    <WeatherText isLight={isLight}>
     Закат солнца: {weather.sys?.sunset ?? '-'}
     </WeatherText>
     </View>
 
-    <WeatherText style={styles.updateInfo} color={color}>
+    <WeatherText style={styles.updateInfo} isLight={isLight}>
     Данные обновлены: {weather?.dt ?? 'dd.mm.yyyy hh:mm:ss'}
     </WeatherText>
     </ScrollView>
@@ -361,11 +370,11 @@ const Weather = () => {
   );
 };
 
-const WeatherText = ({ style, color, children }) => (
+const WeatherText = ({ style, isLight, children }) => (
   <Text
   style={[
     { marginBottom: 2 },
-    color === '#ffffff' ? styles.whiteFont : styles.blackFont,
+    isLight ? styles.blackFont : styles.whiteFont,
     style,
   ]}>
   {children}
