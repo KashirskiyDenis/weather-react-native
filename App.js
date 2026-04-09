@@ -1,20 +1,19 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   Alert,
-  Button,
   ImageBackground,
-  Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import CustomModal from './components/CustomModal';
 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
 const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
@@ -108,8 +107,26 @@ const Weather = () => {
   const [statusBarStyle, setStatusBarStyle] = useState(STYLES[0]);
 
   const changeCityName = () => {
-    setText('');
-    setModalVisible(true);
+    if (Platform.OS === 'ios') {
+      Alert.prompt('Изменить локацию', 'Введите название города', [
+        {
+          text: 'Отмена',
+          style: 'cancel',
+        },
+        {
+          text: 'ОК',
+          onPress: (text) => {
+            if (text.trim().length === 0) {
+              return;
+            }
+            updateWeather(text.trim());
+          },
+        },
+      ]);
+    } else {
+      setText('');
+      setModalVisible(true);
+    }
   };
 
   const changeCityLocation = async () => {
@@ -158,7 +175,9 @@ const Weather = () => {
       });
 
       if (response.status != 200) {
-        Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }]);
+        Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }], {
+          cancelable: true,
+        });
         return;
       }
 
@@ -194,7 +213,9 @@ const Weather = () => {
 
       setCity(data.name);
       setIsLight(!WHITE_TEXT_ICON_CODES.includes(icon));
-      setStatusBarStyle(WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1]);
+      setStatusBarStyle(
+        WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1]
+      );
       setBgImage(IMAGES['i' + icon]);
       setWeather(formatWeather);
     } catch (error) {
@@ -251,29 +272,13 @@ const Weather = () => {
 
   return (
     <SafeAreaProvider>
-    <Modal
-    animationType="slide"
-    transparent={true}
+    <CustomModal
     visible={modalVisible}
-    onRequestClose={() => {
-      setModalVisible(false);
-    }}>
-    <View style={styles.centeredView}>
-    <View style={styles.modalView}>
-    <Text style={{ fontWeight: '600' }}>Изменение локации</Text>
-    <TextInput
-    style={styles.modalText}
-    placeholder="Введите название города"
+    onClose={() => setModalVisible(false)}
+    text={text}
     onChangeText={setText}
-    value={text}
+    onSubmit={changeCity}
     />
-    <View style={styles.fixToText}>
-    <Button title="ОК" onPress={changeCity} />
-    <Button title="Отмена" onPress={() => setModalVisible(false)} />
-    </View>
-    </View>
-    </View>
-    </Modal>
     <ImageBackground
     source={bgImage}
     resizeMode="cover"
@@ -437,27 +442,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   updateInfo: { fontSize: 12, paddingTop: 8 },
-
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0000007d',
-  },
-  modalView: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 15,
-  },
-  modalText: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  fixToText: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
 });
 
 export default Weather;
