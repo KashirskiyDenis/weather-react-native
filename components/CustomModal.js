@@ -68,9 +68,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '500',
     paddingBottom: 20,
-    // borderWidth: 1,
+    color: PlatformColor('@android:color/system_surface_container_dark', '#212121'),
+                                 // borderWidth: 1,
   },
-  modalTextMessage: {},
   modalTextInput: {
     paddingTop: 16,
     paddingBottom: 8,
