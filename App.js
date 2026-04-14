@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   Alert,
   ImageBackground,
@@ -9,75 +9,75 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
-import CustomModal from './components/CustomModal';
+} from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import CustomModal from "./components/CustomModal";
 
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
+const BASE_URL = "https://api.openweathermap.org/data/2.5/";
 const APP_ID = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY;
-const UNITS = 'metric';
-const DEFAULT_CITY = 'Astrakhan';
+const UNITS = "metric";
+const DEFAULT_CITY = "Astrakhan";
 const HPA_TO_MMHG = 0.750062; // 1 гПа = 0.750062 мм рт.ст.
 const COMPASS_SECTORS = 16;
 const DEG_PER_SECTOR = 360 / COMPASS_SECTORS; // 22.5°
 const WIND_DEG_TEXT = [
-  'Северный',
-'ССВ',
-'Северо-восточный',
-'ВСВ',
-'Восточный',
-'ВЮВ',
-'Юго-восточный',
-'ЮЮВ',
-'Южный',
-'ЮЮЗ',
-'Юго-западный',
-'ЗЮЗ',
-'Западный',
-'ЗСЗ',
-'Северо-западный',
-'ССЗ',
+  "Северный",
+  "ССВ",
+  "Северо-восточный",
+  "ВСВ",
+  "Восточный",
+  "ВЮВ",
+  "Юго-восточный",
+  "ЮЮВ",
+  "Южный",
+  "ЮЮЗ",
+  "Юго-западный",
+  "ЗЮЗ",
+  "Западный",
+  "ЗСЗ",
+  "Северо-западный",
+  "ССЗ",
 ];
 const IMAGES = {
-  i01d: require('./images/01d.jpg'),
-  i01n: require('./images/01n.jpg'),
-  i02d: require('./images/02d.jpg'),
-  i02n: require('./images/02n.jpg'),
-  i09d: require('./images/09d.jpg'),
-  i09n: require('./images/09n.jpg'),
-  i11d: require('./images/11d.jpg'),
-  i11n: require('./images/11n.jpg'),
-  i13d: require('./images/13d.jpg'),
-  i13n: require('./images/13n.jpg'),
-  i50d: require('./images/50d.jpg'),
-  i50n: require('./images/50n.jpg'),
+  i01d: require("./images/01d.jpg"),
+  i01n: require("./images/01n.jpg"),
+  i02d: require("./images/02d.jpg"),
+  i02n: require("./images/02n.jpg"),
+  i09d: require("./images/09d.jpg"),
+  i09n: require("./images/09n.jpg"),
+  i11d: require("./images/11d.jpg"),
+  i11n: require("./images/11n.jpg"),
+  i13d: require("./images/13d.jpg"),
+  i13n: require("./images/13n.jpg"),
+  i50d: require("./images/50d.jpg"),
+  i50n: require("./images/50n.jpg"),
 };
 const WHITE_TEXT_ICON_CODES = [
-  '01n',
-'50d',
-'50n',
-'11n',
-'13n',
-'02n',
-'09n',
-'09d',
-'10d',
+  "01n",
+  "50d",
+  "50n",
+  "11n",
+  "13n",
+  "02n",
+  "09n",
+  "09d",
+  "10d",
 ];
 const ICON_MAP = {
-  '03d': '02d',
-  '04d': '02d',
-  '10d': '09d',
-  '03n': '02n',
-  '04n': '02n',
-  '10n': '09n',
+  "03d": "02d",
+  "04d": "02d",
+  "10d": "09d",
+  "03n": "02n",
+  "04n": "02n",
+  "10n": "09n",
 };
-const STYLES = ['default', 'dark-content', 'light-content'];
+const STYLES = ["default", "dark-content", "light-content"];
 
-const buildUrl = (q = '', lat, lon) => {
-  let str = '';
-  if (q !== '')
+const buildUrl = (q = "", lat, lon) => {
+  let str = "";
+  if (q !== "")
     str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
   else
     str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
@@ -89,8 +89,8 @@ const formatCityTime = (time, timezone) => {
   const offset = new Date().getTimezoneOffset() * 60;
 
   return new Date((time + offset + timezone) * 1000).toLocaleTimeString(
-    'ru-RU',
-    { hour: '2-digit', minute: '2-digit' }
+    "ru-RU",
+    { hour: "2-digit", minute: "2-digit" },
   );
 };
 
@@ -99,7 +99,7 @@ const Weather = () => {
   const [city, setCity] = useState(DEFAULT_CITY);
   const [weather, setWeather] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [bgImage, setBgImage] = useState(null);
   const [isLight, setIsLight] = useState(true);
   const controllerRef = useRef(null);
@@ -107,14 +107,14 @@ const Weather = () => {
   const [statusBarStyle, setStatusBarStyle] = useState(STYLES[0]);
 
   const changeCityName = () => {
-    if (Platform.OS === 'ios') {
-      Alert.prompt('Изменить локацию', 'Введите название города', [
+    if (Platform.OS === "ios") {
+      Alert.prompt("Изменить локацию", "Введите название города", [
         {
-          text: 'Отмена',
-          style: 'cancel',
+          text: "Отмена",
+          style: "cancel",
         },
         {
-          text: 'ОК',
+          text: "ОК",
           onPress: (text) => {
             if (text.trim().length === 0) {
               return;
@@ -124,7 +124,7 @@ const Weather = () => {
         },
       ]);
     } else {
-      setText('');
+      setText("");
       setModalVisible(true);
     }
   };
@@ -132,19 +132,19 @@ const Weather = () => {
   const changeCityLocation = async () => {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Ошибка', 'Нет доступа к геолокации.', [{ text: 'OK' }]);
+      if (status !== "granted") {
+        Alert.alert("Ошибка", "Нет доступа к геолокации.", [{ text: "OK" }]);
         return;
       }
     } catch (error) {
-      Alert.alert('Ошибка', 'Не удалось получить геолокацию.', [
-        { text: 'OK' },
+      Alert.alert("Ошибка", "Не удалось получить геолокацию.", [
+        { text: "OK" },
       ]);
       return;
     }
 
     let location = await Location.getCurrentPositionAsync({});
-    updateWeather('', location.coords.latitude, location.coords.longitude);
+    updateWeather("", location.coords.latitude, location.coords.longitude);
   };
 
   const changeCity = () => {
@@ -175,7 +175,7 @@ const Weather = () => {
       });
 
       if (response.status != 200) {
-        Alert.alert('Ошибка', 'Город не найден.', [{ text: 'OK' }], {
+        Alert.alert("Ошибка", "Город не найден.", [{ text: "OK" }], {
           cancelable: true,
         });
         return;
@@ -193,45 +193,45 @@ const Weather = () => {
         sys: {
           ...data.sys,
           sunrise: formatCityTime(data.sys.sunrise, data.timezone),
-                                    sunset: formatCityTime(data.sys.sunset, data.timezone),
+          sunset: formatCityTime(data.sys.sunset, data.timezone),
         },
         dt: `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`,
-                                    weather:
-                                    data.weather[0].description[0].toUpperCase() +
-                                    data.weather[0].description.substring(1),
-                                    wind: {
-                                      ...data.wind,
-                                      deg: WIND_DEG_TEXT[
-                                        Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
-                                      ],
-                                    },
+        weather:
+          data.weather[0].description[0].toUpperCase() +
+          data.weather[0].description.substring(1),
+        wind: {
+          ...data.wind,
+          deg: WIND_DEG_TEXT[
+            Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
+          ],
+        },
       };
 
-      await AsyncStorage.setItem('city', data.name);
+      await AsyncStorage.setItem("city", data.name);
 
       if (!isMountedRef.current) return;
 
       setCity(data.name);
       setIsLight(!WHITE_TEXT_ICON_CODES.includes(icon));
       setStatusBarStyle(
-        WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1]
+        WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1],
       );
-      setBgImage(IMAGES['i' + icon]);
+      setBgImage(IMAGES["i" + icon]);
       setWeather(formatWeather);
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         if (isTimeout) {
           Alert.alert(
-            'Ошибка',
-            'Ошибка сети, проверьте доступ к сайту openweathermap.org',
-            [{ text: 'OK' }]
+            "Ошибка",
+            "Ошибка сети, проверьте доступ к сайту openweathermap.org",
+            [{ text: "OK" }],
           );
         }
       } else {
         Alert.alert(
-          'Ошибка',
-          'Ошибка сети, проверьте подключение с сети Интернет.',
-          [{ text: 'OK' }]
+          "Ошибка",
+          "Ошибка сети, проверьте подключение с сети Интернет.",
+          [{ text: "OK" }],
         );
       }
     } finally {
@@ -248,12 +248,12 @@ const Weather = () => {
     const loadAndFetch = async () => {
       let savedCity = DEFAULT_CITY;
       try {
-        const saved = await AsyncStorage.getItem('city');
+        const saved = await AsyncStorage.getItem("city");
         if (saved !== null) {
           savedCity = saved;
         }
       } catch (error) {
-        console.error('Ошибка чтения AsyncStorage:', error);
+        console.error("Ошибка чтения AsyncStorage:", error);
       }
 
       if (!isMountedRef.current) return;
@@ -272,117 +272,122 @@ const Weather = () => {
 
   return (
     <SafeAreaProvider>
-    <CustomModal
-    visible={modalVisible}
-    onClose={() => setModalVisible(false)}
-    text={text}
-    onChangeText={setText}
-    onSubmit={changeCity}
-    />
-    <ImageBackground
-    source={bgImage}
-    resizeMode="cover"
-    style={styles.background}
-    blurRadius={1}>
-    <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-    <StatusBar animated={true} barStyle={statusBarStyle} />
-    <ScrollView
-    style={styles.container}
-    refreshControl={
-      <RefreshControl
-      refreshing={refreshing}
-      onRefresh={() => updateWeather(city)}
+      <CustomModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        text={text}
+        onChangeText={setText}
+        onSubmit={changeCity}
       />
-    }>
-    <WeatherText style={styles.city} isLight={isLight}>
-    <Text
-    style={[styles.positionIndicatorColor, styles.symbols]}
-    onPress={changeCityLocation}>
-    &#8982;
-    </Text>{' '}
-    {weather?.name ? weather.name : ''}{' '}
-    <Text
-    style={[styles.positionIndicatorColor, styles.symbols]}
-    onPress={changeCityName}>
-    &#9998;
-    </Text>
-    </WeatherText>
-    <WeatherText style={styles.temp} isLight={isLight}>
-    {(weather.main?.temp ?? '-') + '°'}
-    </WeatherText>
-    <WeatherText style={styles.tempMaxMin} isLight={isLight}>
-    {weather.main?.temp_max ?? '-'}°C /{' '}
-    <Text style={styles.tempMin}>
-    {weather.main?.temp_min ?? '-'}°C
-    </Text>
-    </WeatherText>
-    <WeatherText style={styles.weather} isLight={isLight}>
-    {weather?.weather ?? '-'}
-    </WeatherText>
+      <ImageBackground
+        source={bgImage}
+        resizeMode="cover"
+        style={styles.background}
+        blurRadius={2}
+      >
+        <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+          <StatusBar animated={true} barStyle={statusBarStyle} />
+          <ScrollView
+            style={styles.container}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => updateWeather(city)}
+              />
+            }
+          >
+            <WeatherText style={styles.city} isLight={isLight}>
+              <Text
+                style={[styles.symbolsColor, styles.symbols]}
+                onPress={changeCityLocation}
+              >
+                &#8982;
+              </Text>{" "}
+              {weather?.name ? weather.name : ""}{" "}
+              <Text
+                style={[styles.symbolsColor, styles.symbols]}
+                onPress={changeCityName}
+              >
+                &#9998;
+              </Text>
+            </WeatherText>
+            <WeatherText style={styles.temp} isLight={isLight}>
+              {(weather.main?.temp ?? "-") + "°"}
+            </WeatherText>
+            <WeatherText style={styles.tempMaxMin} isLight={isLight}>
+              <Text style={styles.tempMax}>
+                {weather.main?.temp_max ?? "-"}°C /{" "}
+              </Text>
+              {weather.main?.temp_min ?? "-"}°C
+            </WeatherText>
+            <WeatherText style={styles.weather} isLight={isLight}>
+              {weather?.weather ?? "-"}
+            </WeatherText>
 
-    <View>
-    <WeatherText style={styles.title} isLight={isLight}>
-    КОМФОРТ
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Ощущается как: {weather.main?.feels_like ?? '-'}°C
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Влажность: {weather.main?.humidity ?? '-'}%
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Облачность: {weather.clouds?.all ?? '-'}%
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Давление: {weather.main?.pressure ?? '-'} мм рт.ст.
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Видимость: {weather?.visibility ?? '-'} м
-    </WeatherText>
-    </View>
+            <View>
+              <WeatherText style={styles.title} isLight={isLight}>
+                КОМФОРТ
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Ощущается как: {weather.main?.feels_like ?? "-"}°C
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Влажность: {weather.main?.humidity ?? "-"}%
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Облачность: {weather.clouds?.all ?? "-"}%
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Давление: {weather.main?.pressure ?? "-"} мм рт.ст.
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Видимость: {weather?.visibility ?? "-"} м
+              </WeatherText>
+            </View>
 
-    <View>
-    <WeatherText style={styles.title} isLight={isLight}>
-    ВЕТЕР
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Направление ветра: {weather.wind?.deg ?? '-'}
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Скорость ветра: {weather.wind?.speed ?? '-'} м/с
-    </WeatherText>
-    </View>
+            <View>
+              <WeatherText style={styles.title} isLight={isLight}>
+                ВЕТЕР
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Направление ветра: {weather.wind?.deg ?? "-"}
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Скорость ветра: {weather.wind?.speed ?? "-"} м/с
+              </WeatherText>
+            </View>
 
-    <View>
-    <WeatherText style={styles.title} isLight={isLight}>
-    ВОСХОД и ЗАКАТ
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Восход солнца: {weather.sys?.sunrise ?? '-'}
-    </WeatherText>
-    <WeatherText isLight={isLight}>
-    Закат солнца: {weather.sys?.sunset ?? '-'}
-    </WeatherText>
-    </View>
+            <View>
+              <WeatherText style={styles.title} isLight={isLight}>
+                ВОСХОД и ЗАКАТ
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Восход солнца: {weather.sys?.sunrise ?? "-"}
+              </WeatherText>
+              <WeatherText isLight={isLight}>
+                Закат солнца: {weather.sys?.sunset ?? "-"}
+              </WeatherText>
+            </View>
 
-    <WeatherText style={styles.updateInfo} isLight={isLight}>
-    Данные обновлены: {weather?.dt ?? 'dd.mm.yyyy hh:mm:ss'}
-    </WeatherText>
-    </ScrollView>
-    </SafeAreaView>
-    </ImageBackground>
+            <WeatherText style={styles.updateInfo} isLight={isLight}>
+              Данные обновлены: {weather?.dt ?? "dd.mm.yyyy hh:mm:ss"}
+            </WeatherText>
+          </ScrollView>
+        </SafeAreaView>
+      </ImageBackground>
     </SafeAreaProvider>
   );
 };
 
 const WeatherText = ({ style, isLight, children }) => (
   <Text
-  style={[
-    { marginBottom: 2 },
-    isLight ? styles.blackFont : styles.whiteFont,
-    style,
-  ]}>
-  {children}
+    style={[
+      { marginBottom: 2 },
+      isLight ? styles.blackFont : styles.whiteFont,
+      style,
+    ]}
+  >
+    {children}
   </Text>
 );
 
@@ -391,55 +396,52 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   background: {
-    overflow: 'hidden',
+    overflow: "hidden",
     flex: 1,
   },
   symbols: {
-    textShadowColor: 'transparent',
+    fontWeight: "400",
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 1,
+    textShadowRadius: 0,
+  },
+  symbolsColor: {
+    color: "#92c2f2",
   },
   whiteFont: {
-    color: '#ffffff',
-    textShadowColor: '#000000',
+    color: "#ffffff",
+    textShadowColor: "#000000",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   blackFont: {
-    color: '#000000',
-    textShadowColor: '#ffffff',
+    color: "#000000",
+    textShadowColor: "#ffffff",
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 5,
-  },
-  positionIndicatorColor: {
-    color: '#92c2f2',
+    textShadowRadius: 10,
   },
   city: {
     fontSize: 24,
-    textAlign: 'center',
+    textAlign: "center",
     paddingTop: 8,
   },
   temp: {
-    textAlign: 'center',
-    fontSize: 72,
-    fontWeight: '600',
+    textAlign: "center",
+    fontSize: 56,
   },
   tempMaxMin: {
-    textAlign: 'center',
-    fontWeight: '600',
+    textAlign: "center",
   },
-  tempMin: {
-    textAlign: 'center',
-    fontWeight: '400',
+  tempMax: {
+    fontWeight: "600",
   },
   weather: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   title: {
-    fontWeight: '600',
     marginTop: 12,
     marginBottom: 2,
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: "600",
   },
   updateInfo: { fontSize: 12, paddingTop: 8 },
 });
