@@ -27,7 +27,7 @@ function CustomModal({ visible, onClose, text, onChangeText, onSubmit }) {
       visible={visible}
       onRequestClose={onClose}
       onShow={() => {
-        setTimeout(() => inputRef.current?.focus(), 50);
+        inputRef.current?.focus();
       }}
     >
       <KeyboardAvoidingView behavior="height" style={styles.centeredView}>
