@@ -75,12 +75,13 @@ const ICON_MAP = {
 };
 const STYLES = ["default", "dark-content", "light-content"];
 
-const buildUrl = (q = "", lat, lon) => {
-  let str = "";
-  if (q !== "")
-    str = `${BASE_URL}weather?q=${q}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
-  else
-    str = `${BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${APP_ID}&units=${UNITS}&lang=ru`;
+const buildUrl = (q = "", lat, lon, forecast = false) => {
+  let str = forecast ? `${BASE_URL}forecast/daily?` : `${BASE_URL}weather?`;
+  if (q !== "") {
+    str += `appid=${APP_ID}&units=${UNITS}&lang=ru&q=${q}`;
+  } else {
+    str += `appid=${APP_ID}&units=${UNITS}&lang=ru&lat=${lat}&lon=${lon}`;
+  }
 
   return str;
 };
@@ -89,7 +90,7 @@ const formatCityTime = (time, timezone) => {
   const offset = new Date().getTimezoneOffset() * 60;
 
   return new Date((time + offset + timezone) * 1000).toLocaleTimeString(
-    "ru-RU",
+    undefined,
     { hour: "2-digit", minute: "2-digit" },
   );
 };
@@ -98,6 +99,7 @@ const Weather = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [city, setCity] = useState(DEFAULT_CITY);
   const [weather, setWeather] = useState({});
+  const [forecast, setForecast] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [text, setText] = useState("");
   const [bgImage, setBgImage] = useState(null);
@@ -155,6 +157,62 @@ const Weather = () => {
     updateWeather(text.trim());
   };
 
+  const formatCurrentWeather = (data, date) => {
+    return {
+      ...data,
+      main: {
+        ...data.main,
+        pressure: Math.round(data.main.pressure * HPA_TO_MMHG),
+      },
+      sys: {
+        ...data.sys,
+        sunrise: formatCityTime(data.sys.sunrise, data.timezone),
+        sunset: formatCityTime(data.sys.sunset, data.timezone),
+      },
+      dt: `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`,
+      weather:
+        data.weather[0].description[0].toUpperCase() +
+        data.weather[0].description.substring(1),
+      wind: {
+        ...data.wind,
+        deg: WIND_DEG_TEXT[
+          Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
+        ],
+      },
+    };
+  };
+
+  const formatForecastWeather = (data) => {
+    const options = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    };
+    const dataLenght = data.list.length;
+    const arrayForecat = [];
+    for (let i = 0; i < dataLenght; i++) {
+      let forecast = {};
+      let date = new Date(data.list[i].dt * 1000);
+      forecast.date = `${date.toLocaleDateString(undefined, options)}`;
+      forecast.tempMax = Math.round(data.list[i].temp.max);
+      forecast.tempMin = Math.round(data.list[i].temp.min);
+      forecast.description =
+        data.list[i].weather[0].description[0].toUpperCase() +
+        data.list[i].weather[0].description.substring(1);
+      arrayForecat.push(forecast);
+    }
+    return arrayForecat;
+  };
+
+  const checkResponse = (response) => {
+    if (response.status != 200) {
+      const error = new Error();
+      error.name = "NotFound";
+      throw error;
+    }
+    return response.json();
+  };
+
   const updateWeather = useCallback(async (newCity, lat, lon) => {
     controllerRef.current?.abort();
 
@@ -169,55 +227,40 @@ const Weather = () => {
 
     if (isMountedRef.current) setRefreshing(true);
 
+    const currnetUrl = buildUrl(newCity, lat, lon);
+    const forecastUrl = buildUrl(newCity, lat, lon, true);
+
     try {
-      const response = await fetch(buildUrl(newCity, lat, lon), {
-        signal: controller.signal,
-      });
+      const [currentData, forecastData] = await Promise.all([
+        fetch(currnetUrl, { signal: controller.signal }).then(async (res) => {
+          return checkResponse(res);
+        }),
+        fetch(forecastUrl, { signal: controller.signal }).then(async (res) => {
+          return checkResponse(res);
+        }),
+      ]);
 
-      if (response.status != 200) {
-        Alert.alert("Ошибка", "Город не найден.", [{ text: "OK" }], {
-          cancelable: true,
-        });
-        return;
-      }
+      const date = new Date(currentData.dt * 1000);
+      const icon =
+        ICON_MAP[currentData.weather[0].icon] || currentData.weather[0].icon;
+      const currentWeather = formatCurrentWeather(currentData, date);
+      const forecastWeather = formatForecastWeather(forecastData);
 
-      const data = await response.json();
-      const date = new Date(data.dt * 1000);
-      const icon = ICON_MAP[data.weather[0].icon] || data.weather[0].icon;
-      const formatWeather = {
-        ...data,
-        main: {
-          ...data.main,
-          pressure: Math.round(data.main.pressure * HPA_TO_MMHG),
-        },
-        sys: {
-          ...data.sys,
-          sunrise: formatCityTime(data.sys.sunrise, data.timezone),
-          sunset: formatCityTime(data.sys.sunset, data.timezone),
-        },
-        dt: `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`,
-        weather:
-          data.weather[0].description[0].toUpperCase() +
-          data.weather[0].description.substring(1),
-        wind: {
-          ...data.wind,
-          deg: WIND_DEG_TEXT[
-            Math.round(data.wind.deg / DEG_PER_SECTOR) % COMPASS_SECTORS
-          ],
-        },
-      };
+      currentWeather.main.temp_min = forecastWeather[0].tempMin;
+      currentWeather.main.temp_max = forecastWeather[0].tempMax;
 
-      await AsyncStorage.setItem("city", data.name);
+      await AsyncStorage.setItem("city", currentData.name);
 
       if (!isMountedRef.current) return;
 
-      setCity(data.name);
+      setCity(currentData.name);
       setIsLight(!WHITE_TEXT_ICON_CODES.includes(icon));
       setStatusBarStyle(
         WHITE_TEXT_ICON_CODES.includes(icon) ? STYLES[2] : STYLES[1],
       );
       setBgImage(IMAGES["i" + icon]);
-      setWeather(formatWeather);
+      setWeather(currentWeather);
+      setForecast(forecastWeather);
     } catch (error) {
       if (error.name === "AbortError") {
         if (isTimeout) {
@@ -227,6 +270,8 @@ const Weather = () => {
             [{ text: "OK" }],
           );
         }
+      } else if (error.name === "NotFound") {
+        Alert.alert("Ошибка", "Город не найден.", [{ text: "OK" }]);
       } else {
         Alert.alert(
           "Ошибка",
@@ -316,13 +361,39 @@ const Weather = () => {
             </WeatherText>
             <WeatherText style={styles.tempMaxMin} isLight={isLight}>
               <Text style={styles.tempMax}>
-                {weather.main?.temp_max ?? "-"}°C /{" "}
+                {weather.main?.temp_max ?? "-"}° /{" "}
               </Text>
               {weather.main?.temp_min ?? "-"}°C
             </WeatherText>
             <WeatherText style={styles.weather} isLight={isLight}>
               {weather?.weather ?? "-"}
             </WeatherText>
+
+            <View>
+              <WeatherText style={styles.title} isLight={isLight}>
+                ПРОГНОЗ
+              </WeatherText>
+              {forecast.map((item) => {
+                return (
+                  <View style={styles.forecastDay}>
+                    <View style={styles.flexOne}>
+                      <WeatherText isLight={isLight}>{item.date}</WeatherText>
+                    </View>
+                    <View style={styles.flexTwo}>
+                      <WeatherText isLight={isLight} style={styles.textCenter}>
+                        {item.description}
+                      </WeatherText>
+                    </View>
+                    <View style={styles.flexOne}>
+                      <WeatherText isLight={isLight} style={styles.textRight}>
+                        <Text style={styles.tempMax}>{item.tempMax}° </Text>/{" "}
+                        {item.tempMin}°
+                      </WeatherText>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
 
             <View>
               <WeatherText style={styles.title} isLight={isLight}>
@@ -396,8 +467,8 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   background: {
-    overflow: "hidden",
     flex: 1,
+    overflow: "hidden",
   },
   symbols: {
     fontWeight: "400",
@@ -442,6 +513,22 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     fontSize: 20,
     fontWeight: "600",
+  },
+  forecastDay: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  flexOne: {
+    flex: 1,
+  },
+  flexTwo: {
+    flex: 2,
+  },
+  textCenter: {
+    textAlign: "center",
+  },
+  textRight: {
+    textAlign: "right",
   },
   updateInfo: { fontSize: 12, paddingTop: 8 },
 });

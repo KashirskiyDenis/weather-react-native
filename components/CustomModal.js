@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   PlatformColor,
@@ -10,10 +11,14 @@ import {
   View,
 } from "react-native";
 
-const COLOR_BACKGROUND = PlatformColor("?attr/colorBackground");
+const COLOR_BACKGROUND = PlatformColor
+  ? PlatformColor("?attr/colorBackground")
+  : "#ffffff";
 const COLOR_TEXT = "#212121";
 const COLOR_PLACEHOLDER = "#757575";
-const COLOR_ACCENT = PlatformColor("?attr/colorAccent");
+const COLOR_ACCENT = PlatformColor
+  ? PlatformColor("?attr/colorAccent")
+  : "#ff0000";
 const COLOR_BUTTON_PRESSED = "#e0e0e0";
 const COLOR_SCRIM = "rgba(0, 0, 0, 0.6)";
 
@@ -42,9 +47,12 @@ function CustomModal({ visible, onClose, text, onChangeText, onSubmit }) {
               onChangeText={onChangeText}
               value={text}
               returnKeyType="done"
+              submitBehavior="submit"
               onSubmitEditing={() => {
-                if (text.trim().length === 0) return;
-                onSubmit;
+                if (!text.trim()) return;
+
+                onSubmit();
+                Keyboard.dismiss();
               }}
             />
           </View>
