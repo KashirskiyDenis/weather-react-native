@@ -193,7 +193,7 @@ const Weather = () => {
     for (let i = 0; i < dataLength; i++) {
       let forecast = {};
       let date = new Date(data.list[i].dt * 1000);
-      forecast.td = data.list[i].dt;
+      forecast.dt = data.list[i].dt;
       forecast.date = `${date.toLocaleDateString(undefined, options)}`;
       forecast.tempMax = Math.round(data.list[i].temp.max);
       forecast.tempMin = Math.round(data.list[i].temp.min);
