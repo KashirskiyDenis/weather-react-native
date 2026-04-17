@@ -188,20 +188,21 @@ const Weather = () => {
       month: "short",
       day: "numeric",
     };
-    const dataLenght = data.list.length;
-    const arrayForecat = [];
-    for (let i = 0; i < dataLenght; i++) {
+    const dataLength = data.list.length;
+    const arrayForecast = [];
+    for (let i = 0; i < dataLength; i++) {
       let forecast = {};
       let date = new Date(data.list[i].dt * 1000);
+      forecast.td = data.list[i].dt;
       forecast.date = `${date.toLocaleDateString(undefined, options)}`;
       forecast.tempMax = Math.round(data.list[i].temp.max);
       forecast.tempMin = Math.round(data.list[i].temp.min);
       forecast.description =
         data.list[i].weather[0].description[0].toUpperCase() +
         data.list[i].weather[0].description.substring(1);
-      arrayForecat.push(forecast);
+      arrayForecast.push(forecast);
     }
-    return arrayForecat;
+    return arrayForecast;
   };
 
   const checkResponse = (response) => {
@@ -227,17 +228,13 @@ const Weather = () => {
 
     if (isMountedRef.current) setRefreshing(true);
 
-    const currnetUrl = buildUrl(newCity, lat, lon);
+    const currentUrl = buildUrl(newCity, lat, lon);
     const forecastUrl = buildUrl(newCity, lat, lon, true);
 
     try {
       const [currentData, forecastData] = await Promise.all([
-        fetch(currnetUrl, { signal: controller.signal }).then(async (res) => {
-          return checkResponse(res);
-        }),
-        fetch(forecastUrl, { signal: controller.signal }).then(async (res) => {
-          return checkResponse(res);
-        }),
+        fetch(currentUrl, { signal: controller.signal }).then(checkResponse),
+        fetch(forecastUrl, { signal: controller.signal }).then(checkResponse),
       ]);
 
       const date = new Date(currentData.dt * 1000);
@@ -246,8 +243,10 @@ const Weather = () => {
       const currentWeather = formatCurrentWeather(currentData, date);
       const forecastWeather = formatForecastWeather(forecastData);
 
-      currentWeather.main.temp_min = forecastWeather[0].tempMin;
-      currentWeather.main.temp_max = forecastWeather[0].tempMax;
+      currentWeather.main.temp_min =
+        forecastWeather[0]?.tempMin ?? currentWeather.main.temp_min;
+      currentWeather.main.temp_max =
+        forecastWeather[0]?.tempMax ?? currentWeather.main.temp_max;
 
       await AsyncStorage.setItem("city", currentData.name);
 
@@ -375,7 +374,7 @@ const Weather = () => {
               </WeatherText>
               {forecast.map((item) => {
                 return (
-                  <View style={styles.forecastDay}>
+                  <View key={item.dt} style={styles.forecastDay}>
                     <View style={styles.flexOne}>
                       <WeatherText isLight={isLight}>{item.date}</WeatherText>
                     </View>
