@@ -1,14 +1,13 @@
 {
   "expo": {
-    "name": "weather2",
-    "slug": "snack-8d671288-a96e-43e2-a309-40f378eb2434",
+    "name": "weather",
+    "slug": "weather",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +15,22 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+      "icon": "./assets/icon.png",
+      "package": "com.dkashirskiy.weather"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "764c9568-4a0f-4095-a792-9f9cfabfc260"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/764c9568-4a0f-4095-a792-9f9cfabfc260"
     }
   }
 }
