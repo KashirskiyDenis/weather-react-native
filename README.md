@@ -3,16 +3,19 @@
 
 ---
 ## ✨ Возможности
-- 🌡️ Текущая температура, ощущаемая, мин/макс
-- 🌬️ Скорость и направление ветра (16 румбов)
-- 💧 Влажность, давление, облачность, видимость
-- 🌅 Время восхода и заката по часовому поясу города
-- 📍 Определение погоды по геолокации устройства
-- 🏙️ Ручной ввод названия города
-- 💾 Сохранение последнего города между сессиями (AsyncStorage)
-- 🖼️ Фоновое изображение, соответствующее погодным условиям
-- 🔄 Pull-to-refresh для обновления данных
-- ⏱️ Таймаут запроса 15 секунд с понятными сообщениями об ошибках
+- Текущая погода по городу или координатам
+- Прогноз на 5 дней
+- Температура: текущая, min/max, ощущается как
+- Ветер: скорость и направление (16 румбов)
+- Влажность, давление, облачность, видимость
+- Восход и закат по таймзоне города
+- Смена города:
+- iOS: `Alert.prompt`
+- Android: `CustomModal`
+- Pull-to-refresh
+- Сохранение последнего города (`AsyncStorage`)
+- Динамический фон по погоде
+- Отмена запросов (`AbortController`) и таймаут 15 сек
 ---
 ## 🛠️ Стек технологий
 | Технология | Версия | Назначение |
@@ -51,13 +54,16 @@ EXPO_PUBLIC_OPENWEATHER_API_KEY=ваш_ключ_сюда
 npx expo start
 ```
 Далее:
-- 📱 **Телефон** — отсканируйте QR-код приложением Expo Go
-- 🤖 **Android-эмулятор** — нажмите `a` в терминале
-- 🍏 **iOS-симулятор** — нажмите `i` в терминале
+- **Телефон** — отсканируйте QR-код приложением Expo Go
+- **Android-эмулятор** — нажмите `a` в терминале
+- **iOS-симулятор** — нажмите `i` в терминале
 ---
 ## 📁 Структура проекта
 ```
-weather-app/
+weather-react-native/
+├── App.js
+├── components/
+│   └── CustomModal.js
 ├── images/                  # Фоновые изображения по условиям погоды
 │   ├── 01d.jpg              # Ясно, день
 │   ├── 01n.jpg              # Ясно, ночь
@@ -71,9 +77,13 @@ weather-app/
 │   ├── 13n.jpg              # Снег, ночь
 │   ├── 50d.jpg              # Туман, день
 │   └── 50n.jpg              # Туман, ночь
-├── App.js                   # Корневой компонент
+├── assets/
+│   ├── icon.png
+│   └── splash.png
+├── app.json
+├── index.js
+├── package.json
 ├── .env                     # Переменные окружения (не в git)
-├── .gitignore
 └── README.md
 ```
 ---
@@ -82,15 +92,21 @@ weather-app/
 |---|---|---|
 | `EXPO_PUBLIC_OPENWEATHER_API_KEY` | ✅ | API-ключ OpenWeatherMap |
 ---
-## 🌐 API
+## API
 Используется [OpenWeatherMap Current Weather API](https://openweathermap.org/current).
 **Запрос по городу:**
 ```
 GET https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric&lang=ru
 ```
+```
+GET https://api.openweathermap.org/data/2.5/forecast/daily?q={city}&appid={key}&units=metric&lang=ru
+```
 **Запрос по координатам:**
 ```
 GET https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}&units=metric&lang=ru
+```
+```
+GET https://api.openweathermap.org/data/2.5/forecast/daily?lat={lat}&lon={lon}&appid={key}&units=metric&lang=ru
 ```
 ## 📄 Лицензия
 Распространяется под лицензией **MIT**.
