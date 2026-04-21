@@ -22,7 +22,7 @@ const COLOR_ACCENT = PlatformColor
 const COLOR_BUTTON_PRESSED = "#e0e0e0";
 const COLOR_SCRIM = "rgba(0, 0, 0, 0.6)";
 
-function CustomModal({ visible, onClose, text, onChangeText, onSubmit }) {
+function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
   const inputRef = useRef(null);
 
   return (
@@ -127,4 +127,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomModal;
+export default PromptModal;
