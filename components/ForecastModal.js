@@ -46,7 +46,7 @@ function ForecastModal({ visible, onClose, forecast }) {
                 ТЕМПЕРАТУРА
               </Text>
               <Text style={modalStyles.modalTextMessage}>
-                Максимум/мининум: {forecast?.tempMax ?? "-"}° /{" "}
+                Максимум/минимум: {forecast?.tempMax ?? "-"}° /{" "}
                 {forecast?.tempMin ?? "-"}°
               </Text>
               <View style={styles.flexBlock}>
@@ -62,7 +62,7 @@ function ForecastModal({ visible, onClose, forecast }) {
                     {forecast?.tempNight ?? "-"}°C
                   </Text>
                 </View>
-                <View style={modalStyles.flexElement}>
+                <View style={ыtyles.flexElement}>
                   <Text
                     style={[modalStyles.modalTextMessage, styles.textCenter]}
                   >
