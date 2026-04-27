@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -7,12 +7,12 @@ import {
   TextInput,
   TouchableHighlight,
   View,
-} from 'react-native';
+} from "react-native";
 import {
   COLOR_BUTTON_PRESSED,
   COLOR_PLACEHOLDER,
-} from '../constants/ModalColors';
-import modalStyles from '../styles/ModalStyles';
+} from "../constants/modalColors";
+import modalStyles from "../styles/modalStyles";
 
 function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
   const inputRef = useRef(null);
@@ -25,7 +25,8 @@ function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
       onRequestClose={onClose}
       onShow={() => {
         inputRef.current?.focus();
-      }}>
+      }}
+    >
       <KeyboardAvoidingView behavior="height" style={modalStyles.centeredView}>
         <View style={modalStyles.modalView}>
           <View style={modalStyles.modalTextBlock}>
@@ -51,13 +52,15 @@ function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
             <TouchableHighlight
               underlayColor={COLOR_BUTTON_PRESSED}
               style={modalStyles.modalButton}
-              onPress={onClose}>
+              onPress={onClose}
+            >
               <Text style={modalStyles.modalButtonText}>ОТМЕНА</Text>
             </TouchableHighlight>
             <TouchableHighlight
               underlayColor={COLOR_BUTTON_PRESSED}
               style={modalStyles.modalButton}
-              onPress={onSubmit}>
+              onPress={onSubmit}
+            >
               <Text style={modalStyles.modalButtonText}>ИЗМЕНИТЬ</Text>
             </TouchableHighlight>
           </View>

@@ -5,8 +5,8 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
-import { COLOR_BUTTON_PRESSED } from "../constants/ModalColors";
-import modalStyles from "../styles/ModalStyles";
+import { COLOR_BUTTON_PRESSED } from "../constants/modalColors";
+import modalStyles from "../styles/modalStyles";
 
 function ForecastModal({ visible, onClose, forecast }) {
   return (
@@ -24,7 +24,14 @@ function ForecastModal({ visible, onClose, forecast }) {
             </Text>
             <View>
               <Text style={modalStyles.modalTextMessage}>
-                Количество осадков: {forecast?.rain ?? forecast?.snow ?? "-"} мм
+                Осадки:{" "}
+                {forecast?.rain && forecast?.snow
+                  ? `дождь ${forecast.rain} мм, снег ${forecast.snow} мм`
+                  : forecast?.rain
+                    ? `дождь ${forecast.rain} мм`
+                    : forecast?.snow
+                      ? `снег ${forecast.snow} мм`
+                      : "-"}
               </Text>
               <Text style={modalStyles.modalTextMessage}>
                 Облачность: {forecast?.clouds} %
