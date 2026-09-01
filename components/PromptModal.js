@@ -31,7 +31,7 @@ function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}

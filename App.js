@@ -245,27 +245,26 @@ const Weather = () => {
               />
             }
           >
-            <WeatherText style={styles.city} isLight={isLight}>
-              <Pressable
+            <WeatherText style={[styles.city]} isLight={isLight}>
+              <Text
+                style={[styles.symbolsColor, styles.symbols]}
+                onPress={changeCityLocation}
                 accessibilityRole="button"
                 accessibilityLabel="Определить местоположение"
-                onPress={changeCityLocation}
               >
-                <Text style={[styles.symbolsColor, styles.symbols]}>
-                  &#8982;
-                </Text>{" "}
-              </Pressable>
+                &#8982;
+              </Text>{" "}
               {weather?.name ? weather.name : ""}{" "}
-              <Pressable
+              <Text
+                style={[styles.symbolsColor, styles.symbols]}
+                onPress={changeCityName}
                 accessibilityRole="button"
                 accessibilityLabel="Ввести название города"
-                onPress={changeCityName}
               >
-                <Text style={[styles.symbolsColor, styles.symbols]}>
-                  &#9998;
-                </Text>
-              </Pressable>
+                &#9998;
+              </Text>
             </WeatherText>
+
             <WeatherText style={styles.temp} isLight={isLight}>
               {(weather.main?.temp ?? "-") + "°"}
             </WeatherText>
@@ -384,6 +383,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   symbols: {
+    fontSize: 24,
     fontWeight: "400",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 0,
