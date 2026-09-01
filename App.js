@@ -75,15 +75,15 @@ const Weather = () => {
         Alert.alert("Ошибка", "Нет доступа к геолокации.", [{ text: "OK" }]);
         return;
       }
+
+      let location = await Location.getCurrentPositionAsync({});
+      updateWeather("", location.coords.latitude, location.coords.longitude);
     } catch (error) {
       Alert.alert("Ошибка", "Не удалось получить геолокацию.", [
         { text: "OK" },
       ]);
       return;
     }
-
-    let location = await Location.getCurrentPositionAsync({});
-    updateWeather("", location.coords.latitude, location.coords.longitude);
   };
 
   const changeCity = () => {
@@ -245,19 +245,28 @@ const Weather = () => {
             }
           >
             <WeatherText style={styles.city} isLight={isLight}>
-              <Text
-                style={[styles.symbolsColor, styles.symbols]}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Определить местоположение"
                 onPress={changeCityLocation}
               >
-                &#8982;
-              </Text>{" "}
+                <Text style={[styles.symbolsColor, styles.symbols]}>
+                  &#8982;
+                </Text>{" "}
+              </Pressable>
               {weather?.name ? weather.name : ""}{" "}
-              <Text
-                style={[styles.symbolsColor, styles.symbols]}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Ввести название города"
                 onPress={changeCityName}
               >
-                &#9998;
-              </Text>
+                <Text
+                  style={[styles.symbolsColor, styles.symbols]}
+                  onPress={changeCityName}
+                >
+                  &#9998;
+                </Text>
+              </Pressable>
             </WeatherText>
             <WeatherText style={styles.temp} isLight={isLight}>
               {(weather.main?.temp ?? "-") + "°"}

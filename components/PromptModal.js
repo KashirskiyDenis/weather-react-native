@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -17,6 +17,18 @@ import modalStyles from "../styles/modalStyles";
 function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
   const inputRef = useRef(null);
 
+  useEffect(() => {
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      if (visible) {
+        inputRef.current?.blur();
+      }
+    });
+
+    return () => {
+      hideSubscription.remove();
+    };
+  }, [visible]);
+
   return (
     <Modal
       animationType="slide"
@@ -27,7 +39,7 @@ function PromptModal({ visible, onClose, text, onChangeText, onSubmit }) {
         inputRef.current?.focus();
       }}
     >
-      <KeyboardAvoidingView behavior="height" style={modalStyles.centeredView}>
+      <KeyboardAvoidingView behavior="padding" style={modalStyles.centeredView}>
         <View style={modalStyles.modalView}>
           <View style={modalStyles.modalTextBlock}>
             <Text style={modalStyles.modalTextTitle}>Изменить локацию</Text>

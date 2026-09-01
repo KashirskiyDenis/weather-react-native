@@ -3,9 +3,20 @@ import { APP_ID, BASE_URL, UNITS } from "../constants/weather";
 export const buildUrl = (q = "", lat, lon, forecast = false) => {
   let str = forecast ? `${BASE_URL}forecast/daily?` : `${BASE_URL}weather?`;
   if (q !== "") {
-    str += `appid=${APP_ID}&units=${UNITS}&lang=ru&q=${q}`;
+    str += URLSearchParams({
+      appid: APP_ID,
+      units: UNITS,
+      lang: "ru",
+      q: q,
+    }).toString();
   } else {
-    str += `appid=${APP_ID}&units=${UNITS}&lang=ru&lat=${lat}&lon=${lon}`;
+    str += URLSearchParams({
+      appid: APP_ID,
+      units: UNITS,
+      lang: "ru",
+      lat: lat,
+      lon: lon,
+    }).toString();
   }
 
   return str;
