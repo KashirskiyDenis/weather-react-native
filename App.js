@@ -3,6 +3,7 @@ import {
   Alert,
   ImageBackground,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -260,10 +261,7 @@ const Weather = () => {
                 accessibilityLabel="Ввести название города"
                 onPress={changeCityName}
               >
-                <Text
-                  style={[styles.symbolsColor, styles.symbols]}
-                  onPress={changeCityName}
-                >
+                <Text style={[styles.symbolsColor, styles.symbols]}>
                   &#9998;
                 </Text>
               </Pressable>
