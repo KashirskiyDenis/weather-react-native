@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   TouchableHighlight,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { COLOR_BUTTON_PRESSED } from "../constants/modalColors";

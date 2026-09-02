@@ -3,7 +3,6 @@ import {
   Alert,
   ImageBackground,
   Platform,
-  Pressable,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -129,7 +128,12 @@ const Weather = () => {
       currentWeather.main.temp_max =
         forecastWeather[0]?.tempMax ?? currentWeather.main.temp_max;
 
-      saveWeatherCache(currentData.name, currentWeather, forecastWeather, icon);
+      await saveWeatherCache(
+        currentData.name,
+        currentWeather,
+        forecastWeather,
+        icon,
+      );
 
       if (!isMountedRef.current) return;
 
@@ -163,7 +167,7 @@ const Weather = () => {
       }
     } finally {
       clearTimeout(timeoutId);
-      if (isMountedRef.current) {
+      if (isMountedRef.current && controllerRef.current === controller) {
         setRefreshing(false);
       }
     }
